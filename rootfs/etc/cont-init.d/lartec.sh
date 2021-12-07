@@ -49,28 +49,15 @@ else
     fi
 fi
 
-if bashio::config.true 'zigbee_shepherd_devices'; then
-    bashio::log.debug "Searching for custom devices.js file in zigbee2mqtt data path..."
-    if bashio::fs.file_exists "$DATA_PATH/devices.js"; then
-        bashio::log.info "File devices.js found, copying to ./node_modules/zigbee-herdsman-converters/"
-        cp -f "$DATA_PATH"/devices.js ./node_modules/zigbee-herdsman-converters/devices.js
-    else
-        bashio::log.warning "No devices.js file found in data path, starting with default devices.js"
-    fi
-else
-    bashio::log.debug "No devices.js file manipulation required"
-fi
-
-CONFIG_PATH=/data/options.json
-bashio::log.info "Adjusting Zigbee2mqtt core yaml config with add-on quirks ..."
-cat "$CONFIG_PATH" | jq 'del(.data_path, .zigbee_shepherd_devices, .socat)' \
-    | jq 'if .devices then .devices = (.devices | split(",")|map(gsub("\\s+";"";"g"))) else . end' \
-    | jq 'if .groups then .groups = (.groups | split(",")|map(gsub("\\s+";"";"g"))) else . end' \
-    | jq 'if .advanced.ext_pan_id_string then .advanced.ext_pan_id = (.advanced.ext_pan_id_string | (split(",")|map(tonumber))) | del(.advanced.ext_pan_id_string) else . end' \
-    | jq 'if .advanced.network_key_string then .advanced.network_key = (.advanced.network_key_string | (split(",")|map(tonumber))) | del(.advanced.network_key_string) else . end' \
-    | jq 'if .device_options_string then .device_options = (.device_options_string|fromjson) | del(.device_options_string) else . end' \
+# CONFIG_PATH=/data/options.json
+bashio::log.info "Adjusting LarTec Hub yaml config with add-on quirks..."
+# cat "$CONFIG_PATH" \
+echo "" \
     | MQTT_USER="$MQTT_USER"  jq '.mqtt.user=env.MQTT_USER' \
     | MQTT_PASSWORD="$MQTT_PASSWORD" jq '.mqtt.password=env.MQTT_PASSWORD' \
     | MQTT_SERVER="$MQTT_SERVER" jq '.mqtt.server=env.MQTT_SERVER' \
     > $DATA_PATH/configuration.yaml
 
+# LarTec custom_component
+bashio::log.info "Copying LarTec custom_component..."
+c

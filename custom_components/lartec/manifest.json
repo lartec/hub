@@ -1,0 +1,10 @@
+{
+  "domain": "lartec",
+  "name": "Lar Tec",
+  "documentation": "https://github.com/lartec/lartec/",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": [],
+  "iot_class": "local_push",
+  "version": "0.0.1"
+}

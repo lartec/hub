@@ -1,10 +1,11 @@
 {
-  "name": "Zigbee2mqtt",
+  "name": "LarTec Hub",
   "version": "1.22.1-1",
-  "slug": "zigbee2mqtt",
-  "description": "Use your ZigBee devices without the vendor's bridge or gateway",
+  "slug": "lartec-hub",
+  "description": "LarTec Hub",
+  "hassio_api": true,
+  "hassio_role": "manager",
   "uart": true,
-  "url": "https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/tree/master/zigbee2mqtt",
   "startup": "application",
   "services": [
     "mqtt:need"
@@ -18,21 +19,20 @@
   ],
   "boot": "auto",
   "ingress": true,
-  "panel_icon": "mdi:zigbee",
   "map": [
-    "share:rw",
-    "config:rw"
+    "config:rw",
+    "share:rw"
   ],
   "ports": {
-    "8485/tcp": 8485
+    "3000/tcp": 3000
   },
   "ports_description": {
-    "8485/tcp": "Socat tcp-listen port"
+    "3000/tcp": "LarTec Hub tcp-listen port"
   },
   "options": {
   },
   "schema": {
   },
-  "image": "zigbee2mqtt/zigbee2mqtt-{arch}"
+  "MAYBE_I_USE_THIS_image": "zigbee2mqtt/zigbee2mqtt-{arch}"
 }
 
