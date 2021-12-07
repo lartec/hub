@@ -22,6 +22,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """A new MQTT message has been received."""
         hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
 
+    await hass.components.mqtt.async_subscribe('lartec/init', message_received)
+
+    # Return boolean to indicate that initialization was successfully.
+
+    # On events
+    # TODO
+    hass.states
+
+    # Remote setState
+    # TODO
+
+    # Remote setConfigure
+    # TODO
+
+    # Remote softwareUpdate
+    # TODO
+
+    return True
+
+async def FOO_BAR_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Setup our skeleton component."""
+    hass.states.async_set('lartec.foo', 'Bar')
+
+    @callback
+    def message_received(topic: str, payload: str, qos: int) -> None:
+        """A new MQTT message has been received."""
+        hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
+
 
     #
     # On events
@@ -60,6 +88,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Remote softwareUpdate
     # TODO
+
+    # Remote add new device
+    # curl -X POST -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" http://supervisor/host/reboot
 
     # Return boolean to indicate that initialization was successfully.
     return True
