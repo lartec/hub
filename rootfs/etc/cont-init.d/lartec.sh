@@ -63,3 +63,5 @@ echo "" \
 
 # LarTec custom_component
 bashio::log.info "Copying LarTec custom_component..."
+
+# FIXME Write configuration.json and include `lartec:\n`
