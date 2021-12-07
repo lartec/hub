@@ -60,4 +60,3 @@ echo "" \
 
 # LarTec custom_component
 bashio::log.info "Copying LarTec custom_component..."
-c
