@@ -13,6 +13,8 @@ from homeassistant.const import EVENT_TIME_CHANGED, EVENT_STATE_CHANGED, MATCH_A
 # The domain of your component. Should be equal to the name of your component.
 DOMAIN = "lartec"
 
+_LOGGER = logging.getLogger(__name__)
+
 #
 # ON EVENTS
 #
@@ -47,7 +49,27 @@ async def remote_set_state(hass: HomeAssistant) -> None:
     #
     # await hass.components.mqtt.async_subscribe('lartec/setState', message_received)
 
-    return True
+    @callback
+    async def async_set_state(topic: str, payload: str, qos: int) -> None:
+        """A new MQTT message has been received."""
+        domain = "homeassistant"
+        service = "turn_on"
+        service_data = {"entity_id": "switch.0xb4e3f9fffef96753"}
+        blocking = False
+        context = None
+        target = None
+        try:
+            await hass.services.async_call(
+                domain,
+                service,
+                service_data,
+                blocking,
+                context,
+                target,
+            )
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception(err)
+    await hass.components.mqtt.async_subscribe('lartec/setState', async_set_state)
 
 #
 # 
