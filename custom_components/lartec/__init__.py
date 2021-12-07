@@ -13,14 +13,10 @@ from homeassistant.const import EVENT_TIME_CHANGED, EVENT_STATE_CHANGED, MATCH_A
 # The domain of your component. Should be equal to the name of your component.
 DOMAIN = "lartec"
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Setup our skeleton component."""
-    @callback
-    def message_received(topic: str, payload: str, qos: int) -> None:
-        """A new MQTT message has been received."""
-        hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
-    await hass.components.mqtt.async_subscribe('lartec/init', message_received)
-
+#
+# ON EVENTS
+#
+async def on_events
     @callback
     # def forward_event(event: Event) -> None:
     #     """Forward events to mqtt (except time changed ones)."""
@@ -40,60 +36,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.components.mqtt.async_publish("lartec/event", event)
     hass.bus.async_listen(EVENT_STATE_CHANGED, on_events)
 
-    # Return boolean to indicate that initialization was successfully.
-
-    # On events
-    # TODO
-    hass.states
-
-    # Remote setState
-    # TODO
-
-    # Remote setConfigure
-    # TODO
-
-    # Remote softwareUpdate
-    # TODO
-
-    hass.states.async_set('lartec.status', 'OK')
-
-    return True
-
-async def FOO_BAR_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Setup our skeleton component."""
-    hass.states.async_set('lartec.foo', 'Bar')
-
-    @callback
-    def message_received(topic: str, payload: str, qos: int) -> None:
-        """A new MQTT message has been received."""
-        hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
-
-
-    #
-    # On events
-    #
-    # @callback
-    # def forward_events(event: Event) -> None:
-    #     """Forward events to mqtt (except time changed ones)."""
-
-    #     if event.event_type == EVENT_TIME_CHANGED:
-    #         return
-    #     
-    #     hass.components.mqtt.subscribe('lartec/event', event)
-
-    # hass.bus.listen(MATCH_ALL, forward_events)
-
-    @callback
-    async def async_forward_events(event: Event) -> None:
-        """Forward events to mqtt (except time changed ones)."""
-
-        if event.event_type == EVENT_TIME_CHANGED:
-            return
-        
-        await hass.components.mqtt.async_subscribe('lartec/event', event)
-
-    await hass.bus.async_listen(MATCH_ALL, async_forward_events)
-
+#
+# 
+#
+async def remote_set_state
     # Remote setState
     # TODO
     # hass.states.async_set(entity_id, payload)
@@ -101,14 +47,47 @@ async def FOO_BAR_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     #
     # await hass.components.mqtt.async_subscribe('lartec/setState', message_received)
 
-    # Remote setConfigure
-    # TODO
+    return True
 
-    # Remote softwareUpdate
-    # TODO
+#
+# 
+#
+async def remote_set_configure
+    return True
 
+#
+# 
+#
+async def remote_software_update
     # Remote add new device
     # curl -X POST -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" http://supervisor/host/reboot
 
     # Return boolean to indicate that initialization was successfully.
+    return True
+
+#
+# SETUP
+#
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Setup our skeleton component."""
+    @callback
+    def message_received(topic: str, payload: str, qos: int) -> None:
+        """A new MQTT message has been received."""
+        hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
+    await hass.components.mqtt.async_subscribe('lartec/init', message_received)
+
+    # On events
+    await on_events(hass)
+
+    # Remote setState
+    await remote_set_state(hass)
+
+    # Remote setConfigure
+    await remote_set_configure(hass)
+
+    # Remote softwareUpdate
+    await remote_software_update(hass)
+
+    # Return boolean to indicate that initialization was successfully.
+    hass.states.async_set('lartec.status', 'OK')
     return True
