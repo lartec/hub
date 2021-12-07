@@ -16,7 +16,7 @@ DOMAIN = "lartec"
 #
 # ON EVENTS
 #
-async def on_events
+async def on_events(hass: HomeAssistant) -> None:
     @callback
     # def forward_event(event: Event) -> None:
     #     """Forward events to mqtt (except time changed ones)."""
@@ -39,7 +39,7 @@ async def on_events
 #
 # 
 #
-async def remote_set_state
+async def remote_set_state(hass: HomeAssistant) -> None:
     # Remote setState
     # TODO
     # hass.states.async_set(entity_id, payload)
@@ -52,13 +52,13 @@ async def remote_set_state
 #
 # 
 #
-async def remote_set_configure
+async def remote_set_configure(hass: HomeAssistant) -> None:
     return True
 
 #
 # 
 #
-async def remote_software_update
+async def remote_software_update(hass: HomeAssistant) -> None:
     # Remote add new device
     # curl -X POST -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" http://supervisor/host/reboot
 
