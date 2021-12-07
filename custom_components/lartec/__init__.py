@@ -28,6 +28,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Forward events to mqtt (except time changed ones)."""
         if event.event_type == EVENT_TIME_CHANGED:
             return
+
+        if event.domain == "mqtt":
+            return
         hass.components.mqtt.async_publish("lartec/event", event)
     hass.bus.async_listen(MATCH_ALL, forward_event)
 
