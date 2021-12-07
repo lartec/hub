@@ -22,7 +22,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """A new MQTT message has been received."""
         hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
 
-    await hass.components.mqtt.async_subscribe('lartec/init', message_received)
+    hass.components.mqtt.async_subscribe('lartec/init', message_received)
 
     # Return boolean to indicate that initialization was successfully.
 
