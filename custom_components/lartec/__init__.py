@@ -26,8 +26,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     #
     # On events
     #
-    hass.bus.listen("example_component_my_cool_event", handle_event)
-
     @callback
     async def async_forward_events(event: Event) -> None:
         """Forward events to mqtt (except time changed ones)."""
