@@ -33,7 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if event.event_type == EVENT_TIME_CHANGED:
             return
         
-        hass.components.mqtt.async_subscribe('lartec/event', event)
+        hass.components.mqtt.subscribe('lartec/event', event)
 
     hass.bus.async_listen(MATCH_ALL, forward_events)
 
