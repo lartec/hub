@@ -21,9 +21,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def message_received(topic: str, payload: str, qos: int) -> None:
         """A new MQTT message has been received."""
         hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
-
     await hass.components.mqtt.async_subscribe('lartec/init', message_received)
-    hass.bus.async_listen(MATCH_ALL, message_received)
+
+    @callback
+    def forward_events(event: Event) -> None:
+        """Forward events to mqtt (except time changed ones)."""
+        if event.event_type == EVENT_TIME_CHANGED:
+            return
+        hass.components.mqtt.async_publish("lartec/event", event)
+    hass.bus.async_listen(MATCH_ALL, forward_event)
 
     # Return boolean to indicate that initialization was successfully.
 
