@@ -4,9 +4,10 @@ LarTec component.
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from homeassistant.components import mqtt
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, Event, callback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.const import EVENT_TIME_CHANGED, EVENT_STATE_CHANGED, MATCH_ALL
 
@@ -54,10 +55,13 @@ async def remote_set_state(hass: HomeAssistant) -> None:
         """A new MQTT message has been received."""
         domain = "homeassistant"
         service = "turn_on"
-        service_data = {"entity_id": "switch.0xb4e3f9fffef96753"}
+        # service_data = {"entity_id": "switch.0xb4e3f9fffef96753"}
+        service_data = {}
         blocking = False
         context = None
-        target = None
+        limit = None,
+        # target = None
+        target = {"entity_id": "switch.0xb4e3f9fffef96753"}
         try:
             await hass.services.async_call(
                 domain,
@@ -65,6 +69,7 @@ async def remote_set_state(hass: HomeAssistant) -> None:
                 service_data,
                 blocking,
                 context,
+                limit,
                 target,
             )
         except Exception as err:  # pylint: disable=broad-except
