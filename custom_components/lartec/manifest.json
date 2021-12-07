@@ -1,6 +1,6 @@
 {
   "domain": "lartec",
-  "name": "Lar Tec",
+  "name": "LarTec",
   "documentation": "https://github.com/lartec/lartec/",
   "dependencies": ["mqtt"],
   "codeowners": [],

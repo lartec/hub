@@ -1,5 +1,5 @@
 """
-Lar Tec component.
+LarTec component.
 """
 from __future__ import annotations
 
@@ -8,15 +8,13 @@ import asyncio
 from homeassistant.components import mqtt
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.const import EVENT_TIME_CHANGED, MATCH_ALL
+from homeassistant.const import EVENT_TIME_CHANGED, EVENT_STATE_CHANGED, MATCH_ALL
 
 # The domain of your component. Should be equal to the name of your component.
 DOMAIN = "lartec"
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Setup our skeleton component."""
-    hass.states.async_set('lartec.foo', 'Bar')
-
     @callback
     def message_received(topic: str, payload: str, qos: int) -> None:
         """A new MQTT message has been received."""
@@ -40,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def on_events(event: Event) -> None:
         """Forward state changed events to mqtt (except time changed ones)."""
         hass.components.mqtt.async_publish("lartec/event", event)
-    hass.bus.async_listen(EVENT_TIME_CHANGED, forward_event)
+    hass.bus.async_listen(EVENT_STATE_CHANGED, on_events)
 
     # Return boolean to indicate that initialization was successfully.
 
@@ -56,6 +54,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Remote softwareUpdate
     # TODO
+
+    hass.states.async_set('lartec.status', 'OK')
 
     return True
 
