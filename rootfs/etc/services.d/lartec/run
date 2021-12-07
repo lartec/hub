@@ -1,6 +1,6 @@
 #!/usr/bin/with-contenv bashio
 
 export LARTEC_DATA="$(bashio::config 'data_path')"
-cd /app || bashio::exit.nok "Could not change directory to /app"
+# cd /app || bashio::exit.nok "Could not change directory to /app"
 bashio::log.info "Handing over control to LarTec Hub..."
-exec npm start
+while true

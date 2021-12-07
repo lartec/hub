@@ -8,6 +8,9 @@ MQTT_SERVER=$(bashio::config 'mqtt.server')
 MQTT_USER=$(bashio::config 'mqtt.user')
 MQTT_PASSWORD=$(bashio::config 'mqtt.password')
 
+# FIXME delme
+bashio::log.info "Data path '$DATA_PATH'"
+
 if ! bashio::services.available "mqtt" && ! bashio::config.exists 'mqtt.server'; then
     bashio::exit.nok "No internal MQTT service found and no MQTT server defined. Please install Mosquitto broker or specify your own."
 else
@@ -25,7 +28,7 @@ else
         bashio::log.info "MQTT credentials not configured, trying to auto-discovering ..."
         MQTT_USER=$(bashio::services mqtt "username")
         MQTT_PASSWORD=$(bashio::services mqtt "password")
-        bashio::log.info "Configuring'$MQTT_USER' mqtt user"
+        bashio::log.info "Configuring '$MQTT_USER' mqtt user"
     fi
 fi
 
