@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv bashio
+
+cd /app || bashio::exit.nok "Could not change directory to /app"
+bashio::log.info "Starting LarTec Hub..."
+
+# Use node.js directly instead of using `npm start` to run node.js
+source /data/envs
+CMD=$(cat package.json | jq .scripts.start | sed s/\"//g)
+echo $CMD
+eval $CMD
