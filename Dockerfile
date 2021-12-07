@@ -8,9 +8,3 @@ RUN apk add --no-cache jq nodejs npm
 
 COPY rootfs /
 COPY custom_components /config/custom_components
-
-# Copy data for add-on
-COPY run.sh /
-RUN chmod a+x /run.sh
-
-CMD [ "/run.sh" ]
