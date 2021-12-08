@@ -43,6 +43,7 @@ async def on_events(hass: HomeAssistant) -> None:
         try:
             hass.components.mqtt.async_publish("lartec/event", json.dumps(event_dict))
         except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception(event_dict)
             _LOGGER.exception(err)
     hass.bus.async_listen(EVENT_STATE_CHANGED, on_events)
 
