@@ -197,7 +197,7 @@ const client = mqtt.connect(`mqtt://${MQTT_SERVER}`, {
   password: MQTT_PASSWORD,
 });
 
-// FIXME What happens if connection with MQTT is lost, does it reconnect, does it re-subscribe?
+// On disconnection, MQTT will automatically reconnect (attempt on every 1s) and re-subscribe.
 client.on("connect", () => {
   log("MQTT", "Connected");
   client.subscribe("lartec/event", (error) => {
@@ -208,9 +208,11 @@ client.on("connect", () => {
 });
 
 client.on("message", async (topic, payload) => {
-  const eventData = camelcaseKeysDeep(JSON.parse(payload.toString()));
-  console.log("Received Message:", topic, eventData);
-  await hub.events.add(eventData);
+  if (topic === "lartec/event") {
+    const eventData = camelcaseKeysDeep(JSON.parse(payload.toString()));
+    console.log("Received Message:", topic, eventData);
+    await hub.events.add(eventData);
+  }
 });
 
 const hub = new Hub();
