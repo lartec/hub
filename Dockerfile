@@ -8,6 +8,6 @@ RUN apk add --no-cache jq nodejs npm
 
 COPY rootfs /
 COPY app /app
-COPY envs/production /app/.env
+COPY envs/prod /app/.env
 
 # COPY custom_components/lartec /config/custom_components/lartec
