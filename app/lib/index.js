@@ -42,7 +42,7 @@ firebase.initializeApp({
 
 const db = firebase.firestore();
 
-const log = (...args) => console.log(...args);
+const info = (...args) => console.log(...args);
 
 async function getCredentials() {
   let publicKey, privateKey;
@@ -98,7 +98,7 @@ class Hub {
         this.props = {};
         return;
       }
-      log("onAuthStateChanged signIn", auth.uid);
+      info("onAuthStateChanged signIn", auth.uid);
       this.set({ id: auth.uid });
     });
     this.props = {};
@@ -166,12 +166,14 @@ class Hub {
       auth = await firebase.auth().signInWithCustomToken(token);
     } catch (error) {
       if (/PEM routines:get_name:no start line/.test(error.message)) {
+        console.error("Credentials error", error);
+        info("Deleting it and creating a new one...");
         await removeCredentials();
         return await this._auth();
       }
       throw error;
     }
-    log("AUTH", `successful ${auth.user.uid}`);
+    info("AUTH", `successful ${auth.user.uid}`);
     this.set({ id: auth.user.uid });
   }
 
@@ -219,7 +221,7 @@ const client = mqtt.connect(`mqtt://${MQTT_SERVER}`, {
 
 // On disconnection, MQTT will automatically reconnect (attempt on every 1s) and re-subscribe.
 client.on("connect", () => {
-  log("MQTT", "Connected");
+  info("MQTT", "Connected");
   client.subscribe("lartec/event", (error) => {
     if (error) {
       throw error;
@@ -230,7 +232,7 @@ client.on("connect", () => {
 client.on("message", async (topic, payload) => {
   if (topic === "lartec/event") {
     const eventData = jsonParse(payload);
-    console.log("Received Message:", topic, eventData);
+    info("Received Message:", topic, eventData);
     await hub.events.add(eventData);
   }
 });
