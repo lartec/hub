@@ -12,6 +12,7 @@ const fs = require("fs");
 const generateKeyPair = promisify(crypto.generateKeyPair);
 const writeFile = promisify(fs.writeFile);
 const readFile = promisify(fs.readFile);
+const rmFile = promisify(fs.rm);
 const exists = promisify(fs.exists);
 
 const API_KEY = process.env.API_KEY;
@@ -73,6 +74,11 @@ async function getCredentials() {
   }
 
   return { privateKey, privateKeyText, publicKey, publicKeyText };
+}
+
+async function removeCredentials() {
+  rmFile(PRIV_KEY_FILE);
+  rmFile(PUB_KEY_FILE);
 }
 
 async function ResponseError(res) {
@@ -155,7 +161,16 @@ class Hub {
     }
     const { token } = await res.json();
 
-    const auth = await firebase.auth().signInWithCustomToken(token);
+    let auth;
+    try {
+      auth = await firebase.auth().signInWithCustomToken(token);
+    } catch (error) {
+      if (/PEM routines:get_name:no start line/.test(error.message)) {
+        await removeCredentials();
+        return await this._auth();
+      }
+      throw error;
+    }
     log("AUTH", `successful ${auth.user.uid}`);
     this.set({ id: auth.user.uid });
   }
