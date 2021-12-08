@@ -16,9 +16,12 @@ const API_KEY = process.env.API_KEY;
 const PROJECT_ID = process.env.PROJECT_ID;
 const SENDER_ID = process.env.SENDER_ID;
 const APP_ID = process.env.APP_ID;
+const KEYS_PATH = process.env.KEYS_PATH;
 
 // const FUNCTIONS_URL = "http://localhost:5001/lartec-2d3b9/us-central1";
 const FUNCTIONS_URL = "https://us-central1-lartec-2d3b9.cloudfunctions.net";
+const PRIV_KEY_FILE = `${KEYS_PATH}/id_rsa`;
+const PUB_KEY_FILE = `${KEYS_PATH}/id_rsa`;
 
 firebase.initializeApp({
   apiKey: API_KEY,
@@ -36,15 +39,15 @@ const log = (...args) => console.log(...args);
 async function getCredentials() {
   let publicKey, privateKey;
   let publicKeyText, privateKeyText;
-  if (await exists("./id_rsa")) {
-    privateKeyText = (await readFile("./id_rsa")).toString();
+  if (await exists(PRIV_KEY_FILE)) {
+    privateKeyText = (await readFile(PRIV_KEY_FILE)).toString();
     privateKey = crypto.createPrivateKey({
       key: privateKeyText,
       passphrase: "",
     });
   }
-  if (await exists("./id_rsa.pub")) {
-    publicKeyText = (await readFile("./id_rsa.pub")).toString().trim();
+  if (await exists(PUB_KEY_FILE)) {
+    publicKeyText = (await readFile(PUB_KEY_FILE)).toString().trim();
     publicKey = crypto.createPublicKey(publicKeyText);
   }
   if (!privateKey || !publicKey) {
@@ -58,8 +61,8 @@ async function getCredentials() {
       passphrase: "",
     });
     publicKeyText = publicKey.export({ format: "pem", type: "spki" }).trim();
-    await writeFile("./id_rsa", privateKeyText);
-    await writeFile("./id_rsa.pub", publicKeyText);
+    await writeFile(PRIV_KEY_FILE, privateKeyText);
+    await writeFile(PUB_KEY_FILE, publicKeyText);
   }
 
   return { privateKey, privateKeyText, publicKey, publicKeyText };

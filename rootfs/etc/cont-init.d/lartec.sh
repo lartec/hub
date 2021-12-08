@@ -64,6 +64,6 @@ echo "" \
 # LarTec custom_component
 # FIXME Write configuration.json and include `lartec:\n`
 
-# LarTec Hub App: Install npm dependencies
+bashio::log.info "LarTec Hub App: Install npm dependencies..."
 cd /app
 npm install

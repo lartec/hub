@@ -1,0 +1,5 @@
+export API_KEY=AIzaSyCXVuQIqJhyq7Qb7JLk2t74vAFVeAyF5Kg
+export PROJECT_ID=lartec-2d3b9
+export SENDER_ID=460214927260
+export APP_ID=1:460214927260:web:013ee3ad6ee58711059259
+export KEYS_PATH=/data
