@@ -38,7 +38,8 @@ async def on_events(hass: HomeAssistant) -> None:
     def on_events(event: Event) -> None:
         """Forward state changed events to mqtt (except time changed ones)."""
         event_dict = event.as_dict()
-        event_dict["data"]["new_state"] = event.data["new_state"].as_dict()
+        if isinstance(event.data["new_state"], State):
+            event_dict["data"]["new_state"] = event.data["new_state"].as_dict()
         if isinstance(event.data["old_state"], State):
             event_dict["data"]["old_state"] = event.data["old_state"].as_dict()
         try:
