@@ -4,6 +4,7 @@ LarTec component.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 
 from homeassistant.components import mqtt
@@ -36,7 +37,7 @@ async def on_events(hass: HomeAssistant) -> None:
     # State changed events only
     def on_events(event: Event) -> None:
         """Forward state changed events to mqtt (except time changed ones)."""
-        hass.components.mqtt.async_publish("lartec/event", event)
+        hass.components.mqtt.async_publish("lartec/event", json.dumps(event.new_state))
     hass.bus.async_listen(EVENT_STATE_CHANGED, on_events)
 
 #

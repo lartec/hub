@@ -3,13 +3,9 @@
 # Code borrowed from:
 # https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/blob/master/common/rootfs/etc/cont-init.d/zigbee2mqtt.sh
 
-DATA_PATH=$(bashio::config 'data_path')
 MQTT_SERVER=$(bashio::config 'mqtt.server')
 MQTT_USER=$(bashio::config 'mqtt.user')
 MQTT_PASSWORD=$(bashio::config 'mqtt.password')
-
-# FIXME delme
-bashio::log.info "Data path '$DATA_PATH'"
 
 if ! bashio::services.available "mqtt" && ! bashio::config.exists 'mqtt.server'; then
     bashio::exit.nok "No internal MQTT service found and no MQTT server defined. Please install Mosquitto broker or specify your own."
@@ -32,37 +28,19 @@ else
     fi
 fi
 
-bashio::log.debug "Checking if $DATA_PATH exists"
-if ! bashio::fs.directory_exists "$DATA_PATH"; then
-    bashio::log.warning "Data path $DATA_PATH not found"
-    mkdir -p "$DATA_PATH" || bashio::exit.nok "Could not create $DATA_PATH"
-    bashio::log.debug "Created $DATA_PATH"
-else
-    bashio::log.debug "Check if yaml config file exists"
-    if bashio::fs.file_exists "$DATA_PATH/configuration.yaml"; then
-        bashio::log.info "Previous config file found, checking backup"
-        if ! bashio::fs.file_exists "$DATA_PATH/configuration.yaml.bk"; then
-            bashio::log.info "Creating backup config in '$DATA_PATH/.configuration.yaml.bk'"
-            cp $DATA_PATH/configuration.yaml $DATA_PATH/.configuration.yaml.bk
-        else
-            bashio::log.info "Backup already exists, skipping"
-        fi
-    else
-        bashio::log.warning "No configuration found yet to backup"
-    fi
-fi
-
 # CONFIG_PATH=/data/options.json
 bashio::log.info "Adjusting LarTec Hub yaml config with add-on quirks..."
-# cat "$CONFIG_PATH" \
-echo "" \
-    | MQTT_USER="$MQTT_USER"  jq '.mqtt.user=env.MQTT_USER' \
-    | MQTT_PASSWORD="$MQTT_PASSWORD" jq '.mqtt.password=env.MQTT_PASSWORD' \
-    | MQTT_SERVER="$MQTT_SERVER" jq '.mqtt.server=env.MQTT_SERVER' \
-    > $DATA_PATH/configuration.yaml
+# echo "{}" \
+#     | MQTT_USER="$MQTT_USER" jq '.mqtt.user=env.MQTT_USER' \
+#     | MQTT_PASSWORD="$MQTT_PASSWORD" jq '.mqtt.password=env.MQTT_PASSWORD' \
+#     | MQTT_SERVER="$MQTT_SERVER" jq '.mqtt.server=env.MQTT_SERVER' \
+#     > /data/configuration.json
+echo 'export MQTT_USER="'$MQTT_USER'"' > /data/envs
+echo 'export MQTT_PASSWORD="'$MQTT_PASSWORD'"' >> /data/envs
+echo 'export MQTT_SERVER="'$MQTT_SERVER'"' >> /data/envs
 
 # LarTec custom_component
-# FIXME Write configuration.json and include `lartec:\n`
+yq e '.lartec=true' -i /config/configuration.yaml
 
 bashio::log.info "LarTec Hub App: Install npm dependencies..."
 cd /app

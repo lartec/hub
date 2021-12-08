@@ -1,5 +1,6 @@
 const firebase = require("firebase");
 const crypto = require("crypto");
+const mqtt = require("mqtt");
 require("firebase/auth");
 require("firebase/firestore");
 
@@ -16,7 +17,12 @@ const API_KEY = process.env.API_KEY;
 const PROJECT_ID = process.env.PROJECT_ID;
 const SENDER_ID = process.env.SENDER_ID;
 const APP_ID = process.env.APP_ID;
+
 const KEYS_PATH = process.env.KEYS_PATH;
+
+const MQTT_USER = process.env.MQTT_USER;
+const MQTT_PASSWORD = process.env.MQTT_PASSWORD;
+const MQTT_SERVER = process.env.MQTT_SERVER;
 
 // const FUNCTIONS_URL = "http://localhost:5001/lartec-2d3b9/us-central1";
 const FUNCTIONS_URL = "https://us-central1-lartec-2d3b9.cloudfunctions.net";
@@ -89,6 +95,7 @@ class Hub {
       this.set({ id: auth.uid });
     });
     this.props = {};
+    this.events = new HubEvents(this);
   }
 
   set(props) {
@@ -99,14 +106,25 @@ class Hub {
     return this.props[prop];
   }
 
-  // Note:
-  // firebase.auth().setPersistence("local").signInAnonymously();
-  // SignInAnonymously doesn't work on node.js, so implementing our own...
   async auth() {
+    // If hub is already authenticated, immediately returns.
     if (firebase.auth().currentUser) {
       return;
     }
 
+    // Otherwise, sign in (multiple calls always return the same signIn Promise)
+    if (this.signingIn) {
+      return this.signingIn;
+    }
+    this.signingIn = this._auth();
+    await this.signingIn;
+    delete this.signingIn;
+  }
+
+  // Note:
+  // firebase.auth().setPersistence("local").signInAnonymously();
+  // SignInAnonymously doesn't work on node.js, so implementing our own...
+  async _auth() {
     const { privateKey, publicKeyText } = await getCredentials();
 
     let res;
@@ -153,9 +171,39 @@ class Hub {
   }
 }
 
-(async function () {
-  const hub = new Hub();
-  await hub.auth();
-  await hub.init();
-  console.log(hub.props);
-})().catch((err) => console.error(err));
+class HubEvents {
+  constructor(hub) {
+    this.hub = hub;
+  }
+
+  async add(props) {
+    await this.hub.auth();
+    await db
+      .collection("hubsEvents")
+      .add({ hubId: this.hub.id, ...props });
+  }
+}
+
+/**
+ * MQTT
+ */
+const client = mqtt.connect(`mqtt://${MQTT_SERVER}`, {
+  username: MQTT_USER,
+  password: MQTT_PASSWORD,
+});
+
+client.on("connect", () => {
+  log("MQTT", "Connected");
+  client.subscribe("lartec/event", (error) => {
+    if (error) {
+      throw error;
+    }
+  });
+});
+
+client.on("message", async (topic, payload) => {
+  console.log("Received Message:", topic, payload.toString());
+  // await hub.events.add();
+});
+
+const hub = new Hub();

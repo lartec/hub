@@ -1,9 +1,8 @@
 #!/usr/bin/with-contenv bashio
 
-export DATA="$(bashio::config 'data_path')"
-
 cd /app || bashio::exit.nok "Could not change directory to /app"
 bashio::log.info "Starting LarTec Hub..."
 
 # Use node.js directly instead of using `npm start` to run node.js
+source /data/envs
 eval $(cat package.json | jq .scripts.start | sed s/\"//g)
