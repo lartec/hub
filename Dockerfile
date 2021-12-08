@@ -7,4 +7,5 @@ ARG BUILD_VERSION
 RUN apk add --no-cache jq nodejs npm
 
 COPY rootfs /
+COPY app /app
 COPY custom_components/lartec /config/custom_components/lartec
