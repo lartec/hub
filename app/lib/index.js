@@ -15,6 +15,8 @@ const readFile = promisify(fs.readFile);
 const rmFile = promisify(fs.rm);
 const exists = promisify(fs.exists);
 
+const info = (...args) => console.log(...args);
+
 const API_KEY = process.env.API_KEY;
 const PROJECT_ID = process.env.PROJECT_ID;
 const SENDER_ID = process.env.SENDER_ID;
@@ -25,6 +27,15 @@ const KEYS_PATH = process.env.KEYS_PATH;
 const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD;
 const MQTT_SERVER = process.env.MQTT_SERVER;
+
+info("API_KEY", API_KEY);
+info("PROJECT_ID", PROJECT_ID);
+info("SENDER_ID", SENDER_ID);
+info("APP_ID", APP_ID);
+info("KEYS_PATH", KEYS_PATH);
+info("MQTT_USER", MQTT_USER);
+info("MQTT_PASSWORD", MQTT_PASSWORD);
+info("MQTT_SERVER", MQTT_SERVER);
 
 // const FUNCTIONS_URL = "http://localhost:5001/lartec-2d3b9/us-central1";
 const FUNCTIONS_URL = "https://us-central1-lartec-2d3b9.cloudfunctions.net";
@@ -41,8 +52,6 @@ firebase.initializeApp({
 });
 
 const db = firebase.firestore();
-
-const info = (...args) => console.log(...args);
 
 async function getCredentials() {
   let publicKey, privateKey;
