@@ -37,7 +37,13 @@ async def on_events(hass: HomeAssistant) -> None:
     # State changed events only
     def on_events(event: Event) -> None:
         """Forward state changed events to mqtt (except time changed ones)."""
-        hass.components.mqtt.async_publish("lartec/event", json.dumps(event.new_state))
+        event_dict = event.as_dict()
+        event_dict.data.new_state = event_dict.data.new_state.as_dict()
+        event_dict.data.old_state = event_dict.data.old_state.as_dict()
+        try:
+            hass.components.mqtt.async_publish("lartec/event", json.dumps(event_dict))
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception(err)
     hass.bus.async_listen(EVENT_STATE_CHANGED, on_events)
 
 #

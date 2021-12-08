@@ -1,5 +1,6 @@
-const firebase = require("firebase");
+const camelcaseKeysDeep = require("camelcase-keys-deep");
 const crypto = require("crypto");
+const firebase = require("firebase");
 const mqtt = require("mqtt");
 require("firebase/auth");
 require("firebase/firestore");
@@ -177,10 +178,14 @@ class HubEvents {
   }
 
   async add(props) {
+    const { eventType } = props;
+    if (eventType === "stateChanged") {
+      // If device, set current state to db.
+      // const {entityId} = event.data;
+      // this.hub.set(devices: {entityId: {state}});
+    }
     await this.hub.auth();
-    await db
-      .collection("hubsEvents")
-      .add({ hubId: this.hub.id, ...props });
+    await db.collection("hubsEvents").add({ hubId: this.hub.id, ...props });
   }
 }
 
@@ -192,6 +197,7 @@ const client = mqtt.connect(`mqtt://${MQTT_SERVER}`, {
   password: MQTT_PASSWORD,
 });
 
+// FIXME What happens if connection with MQTT is lost, does it reconnect, does it re-subscribe?
 client.on("connect", () => {
   log("MQTT", "Connected");
   client.subscribe("lartec/event", (error) => {
@@ -202,8 +208,9 @@ client.on("connect", () => {
 });
 
 client.on("message", async (topic, payload) => {
-  console.log("Received Message:", topic, payload.toString());
-  // await hub.events.add();
+  const eventData = camelcaseKeysDeep(JSON.parse(payload.toString()));
+  console.log("Received Message:", topic, eventData);
+  await hub.events.add(eventData);
 });
 
 const hub = new Hub();
