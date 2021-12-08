@@ -1,4 +1,4 @@
-const camelcaseKeysDeep = require("camelcase-keys-deep");
+const camelcaseKeys = require("camelcase-keys");
 const crypto = require("crypto");
 const firebase = require("firebase");
 const mqtt = require("mqtt");
@@ -192,6 +192,11 @@ class HubEvents {
 /**
  * MQTT
  */
+const jsonParse = (payload) =>
+  camelcaseKeys(JSON.parse(payload.toString()), {
+    deep: true,
+  });
+
 const client = mqtt.connect(`mqtt://${MQTT_SERVER}`, {
   username: MQTT_USER,
   password: MQTT_PASSWORD,
@@ -209,7 +214,7 @@ client.on("connect", () => {
 
 client.on("message", async (topic, payload) => {
   if (topic === "lartec/event") {
-    const eventData = camelcaseKeysDeep(JSON.parse(payload.toString()));
+    const eventData = jsonParse(payload);
     console.log("Received Message:", topic, eventData);
     await hub.events.add(eventData);
   }

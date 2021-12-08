@@ -39,9 +39,9 @@ async def on_events(hass: HomeAssistant) -> None:
         """Forward state changed events to mqtt (except time changed ones)."""
         event_dict = event.as_dict()
         _LOGGER.info(event_dict)
-        _LOGGER.info(event.data.new_state.as_dict())
-        event_dict["data"]["new_state"] = event.data.new_state.as_dict()
-        event_dict["data"]["old_state"] = event.data.old_state.as_dict()
+        _LOGGER.info(event.data["new_state"].as_dict())
+        event_dict["data"]["new_state"] = event.data["new_state"].as_dict()
+        event_dict["data"]["old_state"] = event.data["old_state"].as_dict()
         _LOGGER.info(event_dict)
         try:
             hass.components.mqtt.async_publish("lartec/event", json.dumps(event_dict))
