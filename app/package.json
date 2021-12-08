@@ -1,0 +1,28 @@
+{
+  "name": "hub-lartec",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hub LarTec",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "eslint lib",
+    "prettier": "prettier --write lib/**/*js",
+    "start": "source .env && node lib/index.js"
+  },
+  "engines": {
+    "node": ">=12"
+  },
+  "author": "lartec",
+  "dependencies": {
+    "express": "^4.17.1",
+    "firebase": "^8.10.0",
+    "node-fetch": "^2.6.6"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.23.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.4.1"
+  }
+}
