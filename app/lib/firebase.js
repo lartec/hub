@@ -102,11 +102,35 @@ class Hub {
     firebase.auth().onAuthStateChanged(async (auth) => {
       if (!auth) {
         this.props = {};
+        if (this.realtimeUnsubscribe1) {
+          this.realtimeUnsubscribe1();
+        }
+        if (this.realtimeUnsubscribe2) {
+          this.realtimeUnsubscribe2();
+        }
         return;
       }
       debug("onAuthStateChanged signIn", auth.uid);
       this.set({ id: auth.uid });
     });
+  }
+
+  onSetState(cb) {
+    this.ee.on("onSetState", cb);
+  }
+
+  onSetConfig(cb) {
+    this.ee.on("onSetConfig", cb);
+  }
+
+  onAddNewDevice(cb) {
+    this.ee.on("onAddNewDevice", cb);
+  }
+
+  actionsQueue() {
+    return db
+      .collection("hubsActionsQueue")
+      .where("hubId", "==", this.props.id);
   }
 
   docRef() {
@@ -170,6 +194,36 @@ class Hub {
     auth = await firebase.auth().signInWithCustomToken(token);
     debug(`AUTH successful ${auth.user.uid}`);
     this.set({ id: auth.user.uid });
+
+    // Listen to realtime udpates
+    this.realtimeUnsubscribe1 = this.docRef().onSnapshot((doc) => {
+      this.set(doc.data());
+    });
+    this.realtimeUnsubscribe2 = this.actionsQueue().onSnapshot(
+      (querySnapshot) => {
+        querySnapshot.forEach((doc) => this._emitTakeAction(doc.data()));
+      }
+    );
+  }
+
+  _emitTakeAction(doc) {
+    const id = doc.id;
+    const { action, ...rest } = doc.data();
+    const event = {
+      addNewDevice: "onAddNewDevice",
+      setConfig: "onSetConfig",
+      setState: "onSetState",
+    }[action];
+    if (!event) {
+      throw new Error("Missing action listener");
+    }
+    const isListened = this.ee.emit(event, rest);
+    if (isListened) {
+      db.collection("hubsActionsQueue")
+        .doc(id)
+        .delete()
+        .catch(logAndRethrowException);
+    }
   }
 
   async init() {
@@ -182,6 +236,11 @@ class Hub {
     const data = hubDoc.data();
     debug("init", data);
     this.set(data);
+
+    // Process pending actions
+    (await this.actionsQueue().get()).forEach((doc) =>
+      this._emitTakeAction(doc.data())
+    );
   }
 
   async addEvent(eventProps) {
@@ -209,6 +268,7 @@ class Hub {
     }
 
     // Update hub according to event
+    // TODO: Batch state changes from multiple devices to save on write requests
     if (eventType === "state_changed" && entityId.startsWith("switch.")) {
       const deviceId = entityId.split(".")[1];
 

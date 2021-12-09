@@ -64,15 +64,14 @@ async def remote_set_state(hass: HomeAssistant) -> None:
     @callback
     async def async_set_state(topic: str, payload: str, qos: int) -> None:
         """A new MQTT message has been received."""
+        payload_data = json.parse(payload);
         domain = "homeassistant"
-        service = "turn_on"
-        # service_data = {"entity_id": "switch.0xb4e3f9fffef96753"}
+        service = payload_data["service"]
         service_data = {}
         blocking = False
         context = None
         limit = None,
-        # target = None
-        target = {"entity_id": "switch.0xb4e3f9fffef96753"}
+        target = {"entity_id": payload_data["entity_id"]}
         try:
             await hass.services.async_call(
                 domain,

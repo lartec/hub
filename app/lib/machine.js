@@ -1,7 +1,9 @@
 const EventEmitter = require("events");
-const camelcaseKeys = require("camelcase-keys");
 const mqtt = require("mqtt");
 const debug = require("debug")("app:machine");
+
+const camelcaseKeys = require("camelcase-keys");
+const snakecaseKeys = require("snakecase-keys");
 
 const {
   logExceptions,
@@ -36,6 +38,7 @@ class Hub {
       username: MQTT_USER,
       password: MQTT_PASSWORD,
     });
+    this.client = client;
 
     // On disconnection, MQTT will automatically reconnect (attempt on every 1s) and re-subscribe.
     client.on(
@@ -65,7 +68,7 @@ class Hub {
             data = jsonParse(payload);
           } catch (error) {
             if (/SyntaxError.*JSON/.test(error)) {
-              data = payload;
+              data = payload.toString();
             } else {
               throw error;
             }
@@ -86,6 +89,21 @@ class Hub {
   }
   onZigbeeEvent(cb) {
     this.ee.on("zigbeeEvent", cb);
+  }
+
+  // deviceId example: 0xb4e3f9fffef96753
+  // state example: "on", "off", "toggle"
+  async setState({ deviceId, state }) {
+    const entityId = `switch.${deviceId}`;
+    const service = {
+      on: "turn_on",
+      off: "turn_off",
+      toggle: "toggle",
+    }[state];
+    this.client.publish(
+      "lartec/setState",
+      JSON.stringify(snakecaseKeys({ entityId, service }, { deep: true }))
+    );
   }
 }
 
