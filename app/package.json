@@ -7,7 +7,7 @@
   "scripts": {
     "test": "eslint lib",
     "prettier": "prettier --write lib/**/*js",
-    "start": "source .env && node lib/index.js"
+    "start": "source .env && DEBUG=app node lib/index.js"
   },
   "engines": {
     "node": ">=12"
@@ -15,6 +15,7 @@
   "author": "lartec",
   "dependencies": {
     "camelcase-keys": "^7.0.1",
+    "debug": "^4.3.3",
     "express": "^4.17.1",
     "firebase": "^8.10.0",
     "mqtt": "^4.2.8",
