@@ -5,4 +5,4 @@ export APP_ID=1:460214927260:web:013ee3ad6ee58711059259
 export KEYS_PATH=.
 export MQTT_USER=addons
 export MQTT_PASSWORD=Imee3aihaurabohDach6quoozoo0aesh8paimip6aeb4quaivoon6aichuhaZeim
-export MQTT_SERVER=lartec.local
+export MQTT_SERVER=10.0.0.22

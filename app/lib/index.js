@@ -12,7 +12,7 @@ const fs = require("fs");
 const generateKeyPair = promisify(crypto.generateKeyPair);
 const writeFile = promisify(fs.writeFile);
 const readFile = promisify(fs.readFile);
-const rmFile = promisify(fs.rm);
+const rmFile = promisify(fs.unlink);
 const exists = promisify(fs.exists);
 
 const info = (...args) => console.log(...args);
@@ -28,19 +28,19 @@ const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD;
 const MQTT_SERVER = process.env.MQTT_SERVER;
 
-info("API_KEY", API_KEY);
+info("API_KEY <secret>");
 info("PROJECT_ID", PROJECT_ID);
 info("SENDER_ID", SENDER_ID);
 info("APP_ID", APP_ID);
 info("KEYS_PATH", KEYS_PATH);
 info("MQTT_USER", MQTT_USER);
-info("MQTT_PASSWORD", MQTT_PASSWORD);
+info("MQTT_PASSWORD <secret>");
 info("MQTT_SERVER", MQTT_SERVER);
 
 // const FUNCTIONS_URL = "http://localhost:5001/lartec-2d3b9/us-central1";
 const FUNCTIONS_URL = "https://us-central1-lartec-2d3b9.cloudfunctions.net";
 const PRIV_KEY_FILE = `${KEYS_PATH}/id_rsa`;
-const PUB_KEY_FILE = `${KEYS_PATH}/id_rsa`;
+const PUB_KEY_FILE = `${KEYS_PATH}/id_rsa.pub`;
 
 firebase.initializeApp({
   apiKey: API_KEY,
@@ -112,6 +112,10 @@ class Hub {
     });
     this.props = {};
     this.events = new HubEvents(this);
+  }
+
+  docRef() {
+    return db.collection("hubs").doc(this.props.id);
   }
 
   set(props) {
@@ -188,8 +192,7 @@ class Hub {
 
   async init() {
     await this.auth();
-    const hubRef = db.collection("hubs").doc(this.props.id);
-    const hubDoc = await hubRef.get();
+    const hubDoc = await this.docRef().get();
     if (!hubDoc.exists) {
       // Unexpected.
       throw new Error("Internal error");
@@ -204,14 +207,22 @@ class HubEvents {
   }
 
   async add(props) {
-    const { eventType } = props;
-    if (eventType === "stateChanged") {
-      // If device, set current state to db.
+    const { eventType, data } = props;
+    await this.hub.auth();
+    if (
+      eventType === "state_changed" &&
+      data.newState.entityId.startsWith("switch.")
+    ) {
+      const deviceId = data.newState.entityId.split(".")[1];
+      this.hub
+        .docRef()
+        .set({ devices: { [deviceId]: data.newState } }, { merge: true });
       // const {entityId} = event.data;
       // this.hub.set(devices: {entityId: {state}});
     }
-    await this.hub.auth();
-    await db.collection("hubsEvents").add({ hubId: this.hub.id, ...props });
+    await db
+      .collection("hubsEvents")
+      .add({ hubId: this.hub.props.id, ...props });
   }
 }
 
@@ -228,22 +239,45 @@ const client = mqtt.connect(`mqtt://${MQTT_SERVER}`, {
   password: MQTT_PASSWORD,
 });
 
-// On disconnection, MQTT will automatically reconnect (attempt on every 1s) and re-subscribe.
-client.on("connect", () => {
-  info("MQTT", "Connected");
-  client.subscribe("lartec/event", (error) => {
-    if (error) {
+function logExceptions(fn) {
+  return async function (...args) {
+    try {
+      await fn(...args);
+    } catch (error) {
+      console.error(error);
       throw error;
     }
-  });
-});
+  };
+}
 
-client.on("message", async (topic, payload) => {
-  if (topic === "lartec/event") {
-    const eventData = jsonParse(payload);
-    info("Received Message:", topic, eventData);
-    await hub.events.add(eventData);
-  }
+// On disconnection, MQTT will automatically reconnect (attempt on every 1s) and re-subscribe.
+client.on(
+  "connect",
+  logExceptions(() => {
+    info("MQTT", "Connected");
+    client.subscribe("lartec/event", (error) => {
+      if (error) {
+        throw error;
+      }
+    });
+  })
+);
+
+client.on(
+  "message",
+  logExceptions(async (topic, payload) => {
+    if (topic === "lartec/event") {
+      const eventData = jsonParse(payload);
+      info("Received Message:", topic, eventData);
+      await hub.events.add(eventData);
+      return;
+    }
+    info("Received Message:", topic, payload.toString());
+  })
+);
+
+client.on("error", (error) => {
+  console.error(error);
 });
 
 const hub = new Hub();

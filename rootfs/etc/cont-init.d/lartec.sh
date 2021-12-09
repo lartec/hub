@@ -10,21 +10,20 @@ MQTT_PASSWORD=$(bashio::config 'mqtt.password')
 if ! bashio::services.available "mqtt" && ! bashio::config.exists 'mqtt.server'; then
     bashio::exit.nok "No internal MQTT service found and no MQTT server defined. Please install Mosquitto broker or specify your own."
 else
-    bashio::log.info "MQTT available, fetching server detail ..."
+    bashio::log.info "MQTT available, fetching server details..."
     if ! bashio::config.exists 'mqtt.server'; then
-        bashio::log.info "MQTT server settings not configured, trying to auto-discovering ..."
         MQTT_PREFIX="mqtt://"
         if [ $(bashio::services mqtt "ssl") = true ]; then
             MQTT_PREFIX="mqtts://"
         fi
         MQTT_SERVER="$MQTT_PREFIX$(bashio::services mqtt "host"):$(bashio::services mqtt "port")"
-        bashio::log.info "Configuring '$MQTT_SERVER' mqtt server"
+        bashio::log.info "- MQTT_SERVER='$MQTT_SERVER'"
     fi
     if ! bashio::config.exists 'mqtt.user'; then
-        bashio::log.info "MQTT credentials not configured, trying to auto-discovering ..."
         MQTT_USER=$(bashio::services mqtt "username")
         MQTT_PASSWORD=$(bashio::services mqtt "password")
-        bashio::log.info "Configuring '$MQTT_USER' mqtt user"
+        bashio::log.info "- MQTT_USER='$MQTT_USER'"
+        bashio::log.info "- MQTT_PASSWORD='<secret>'"
     fi
 fi
 
