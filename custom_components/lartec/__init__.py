@@ -64,7 +64,7 @@ async def remote_set_state(hass: HomeAssistant) -> None:
     @callback
     async def async_set_state(topic: str, payload: str, qos: int) -> None:
         """A new MQTT message has been received."""
-        payload_data = json.parse(payload);
+        payload_data = json.loads(payload);
         domain = "homeassistant"
         service = payload_data["service"]
         service_data = {}
