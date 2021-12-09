@@ -5,4 +5,6 @@ bashio::log.info "Starting LarTec Hub..."
 
 # Use node.js directly instead of using `npm start` to run node.js
 source /data/envs
-eval $(cat package.json | jq .scripts.start | sed s/\"//g)
+CMD=$(cat package.json | jq .scripts.start | sed s/\"//g)
+echo $CMD
+eval $CMD

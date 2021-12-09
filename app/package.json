@@ -7,7 +7,7 @@
   "scripts": {
     "test": "eslint lib",
     "prettier": "prettier --write lib/**/*js",
-    "start": "source .env && DEBUG=app node lib/index.js"
+    "start": "source .env && DEBUG=app:* node lib/index.js"
   },
   "engines": {
     "node": ">=12"
