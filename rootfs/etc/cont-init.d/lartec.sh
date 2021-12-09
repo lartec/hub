@@ -43,4 +43,4 @@ yq e '.lartec=true' -i /config/configuration.yaml
 
 bashio::log.info "LarTec Hub App: Install npm dependencies..."
 cd /app
-npm install
+npm install --prod

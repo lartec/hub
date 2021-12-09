@@ -234,7 +234,7 @@ const jsonParse = (payload) =>
     deep: true,
   });
 
-const client = mqtt.connect(`mqtt://${MQTT_SERVER}`, {
+const client = mqtt.connect(MQTT_SERVER, {
   username: MQTT_USER,
   password: MQTT_PASSWORD,
 });
