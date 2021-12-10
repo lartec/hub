@@ -174,6 +174,10 @@ class Hub {
     }
     const { sample } = await res.json();
     debug({ sample });
+    if (!sample) {
+      debug("Weird to have falsy sample, retring to auth...");
+      return await this._auth();
+    }
     const signature = crypto
       .sign("sha512", Buffer.from(sample), {
         key: privateKey,
