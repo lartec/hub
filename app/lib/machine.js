@@ -105,6 +105,28 @@ class Hub {
       JSON.stringify(snakecaseKeys({ entityId, service }, { deep: true }))
     );
   }
+
+  async setConfig() {
+    // Group reload:
+    // call_service:
+    //     "domain": "group",
+    //     "service": "reload",
+    //     "service_data": {}
+    // },
+    //
+    // Automation reload
+    //     "domain": "automation",
+    //     "service": "reload",
+    //     "service_data": {}
+    //
+    // POST /api/services/group/reload
+    // POST /api/services/automation/reload
+    },
+  }
+
+  async addNewDevice() {
+    // restart POST supervisor
+  }
 }
 
 const hub = new Hub();

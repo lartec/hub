@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "slug": "lartec-hub",
   "description": "LarTec",
+  "homeassistant_api": true,
   "hassio_api": true,
   "hassio_role": "manager",
   "uart": true,
@@ -24,10 +25,10 @@
     "share:rw"
   ],
   "ports": {
-    "8555/tcp": 8555
+    "4000/tcp": 4000
   },
   "ports_description": {
-    "8555/tcp": "LarTec Hub tcp-listen port"
+    "4000/tcp": "LarTec Hub tcp-listen port"
   },
   "options": {
   },

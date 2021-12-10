@@ -128,6 +128,7 @@ class Hub {
   }
 
   actionsQueue() {
+    db.collection("hubsActionsQueue").where("hubId", "==", this.props.id);
     return db
       .collection("hubsActionsQueue")
       .where("hubId", "==", this.props.id);
@@ -201,7 +202,7 @@ class Hub {
     });
     this.realtimeUnsubscribe2 = this.actionsQueue().onSnapshot(
       (querySnapshot) => {
-        querySnapshot.forEach((doc) => this._emitTakeAction(doc.data()));
+        querySnapshot.forEach((doc) => this._emitTakeAction(doc));
       }
     );
   }
@@ -218,6 +219,7 @@ class Hub {
       throw new Error("Missing action listener");
     }
     const isListened = this.ee.emit(event, rest);
+    debug(`emit ${event} ${rest}`);
     if (isListened) {
       db.collection("hubsActionsQueue")
         .doc(id)
@@ -239,7 +241,7 @@ class Hub {
 
     // Process pending actions
     (await this.actionsQueue().get()).forEach((doc) =>
-      this._emitTakeAction(doc.data())
+      this._emitTakeAction(doc)
     );
   }
 
@@ -319,4 +321,4 @@ class Hub {
 const hub = new Hub();
 hub.init().catch(logAndRethrowException(debug));
 
-module.exports = { hub };
+module.exports = { hub, db };
