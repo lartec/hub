@@ -134,6 +134,16 @@ class Hub {
       .where("hubId", "==", this.props.id);
   }
 
+  async addUser(userId) {
+    // TODO: At this moment, a hub can add any user (one who wants to be added or not). Figure out if this is a security concern.
+    await this.auth();
+    this.docRef().update({
+      users: firebase.firestore.FieldValue.arrayUnion(
+        db.collection("users").doc(userId)
+      ),
+    });
+  }
+
   docRef() {
     return db.collection("hubs").doc(this.props.id);
   }

@@ -33,7 +33,5 @@
   "options": {
   },
   "schema": {
-  },
-  "MAYBE_I_USE_THIS_image": "zigbee2mqtt/zigbee2mqtt-{arch}"
+  }
 }
-
