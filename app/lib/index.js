@@ -60,3 +60,4 @@ app.use(function (error, req, res, next) {
 });
 
 app.listen(port);
+debug(`Server listening on port ${port}`);
