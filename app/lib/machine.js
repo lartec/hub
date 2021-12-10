@@ -119,9 +119,10 @@ class Hub {
     //     "service": "reload",
     //     "service_data": {}
     //
+    // POST http://supervisor/core/api/...
+    // -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" -H "Content-Type: application/json"
     // POST /api/services/group/reload
     // POST /api/services/automation/reload
-    },
   }
 
   async addNewDevice() {
