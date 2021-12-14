@@ -30,6 +30,7 @@ hubCloud.onSetConfig(logExceptions(async function () {}, debug));
 hubCloud.onAddNewDevice(logExceptions(async function () {}, debug));
 
 const app = express();
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.json({ data: "Go to https://lar.tec.br" });
@@ -48,6 +49,24 @@ app.put("/users/:userId", async (req, res, next) => {
   }
   try {
     await hubCloud.addUser(userId);
+  } catch (error) {
+    return next(error);
+  }
+  res.json({ data: "ok" });
+});
+
+// PUT /devices/{deviceId}
+app.put("/devices/:deviceId", async (req, res, next) => {
+  const { deviceId } = req.params;
+  const { state } = req.body || {};
+  if (!deviceId) {
+    return next(new Error("Missing required deviceId param"));
+  }
+  if (!state) {
+    return next(new Error("Missing required body.state param"));
+  }
+  try {
+    await hubMachine.setState({ deviceId, state });
   } catch (error) {
     return next(error);
   }

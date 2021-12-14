@@ -1,6 +1,8 @@
 const EventEmitter = require("events");
-const mqtt = require("mqtt");
+const bonjour = require("bonjour")();
 const debug = require("debug")("app:machine");
+const fetch = require("node-fetch");
+const mqtt = require("mqtt");
 
 const camelcaseKeys = require("camelcase-keys");
 const snakecaseKeys = require("snakecase-keys");
@@ -26,6 +28,57 @@ const jsonParse = (payload) =>
   camelcaseKeys(JSON.parse(payload.toString()), {
     deep: true,
   });
+
+/**
+ * Zeroconf
+ *
+ * Android doesn't resolve .local names and its zeroconf (via NSD) is a crap. Therefore, figuring
+ * out the LAN IP ourselves and setting it up as zeroconf fqdn name, making it easier for the
+ * Android app.
+ */
+async function setZeroconfName() {
+  const res = await fetch("http://supervisor/network/info", {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer: ${process.env.SUPERVISOR_TOKEN}`,
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`Couldn't setup zeroconf: ${await res.text()}`);
+  }
+  let ip;
+  try {
+    const { data } = await res.json();
+    ip = data.interfaces
+      .find((item) => item["interface"] === "eth0")
+      .ipv4.address[0].split("/")[0];
+    // FIXME, retry in case it's for some reason not ready.
+  } catch (error) {
+    throw new Error(
+      `Couldn't setup zeroconf: ${error.message}\n${error.stack}`
+    );
+  }
+
+  const noop = () => {};
+  const ipUnderscored = ip.replace(/[.]/g, "_");
+  // "LarTec Hub API:10_0_0_22"
+  bonjour.publish(
+    { name: `LarTec Hub API:${ipUnderscored}`, type: "http", port: 4000 },
+    noop
+  );
+  [
+    "exit",
+    "SIGINT",
+    "SIGUSR1",
+    "SIGUSR2",
+    "uncaughtException",
+    "SIGTERM",
+  ].forEach((eventType) => {
+    process.on(eventType, function () {
+      bonjour.unpublishAll();
+    });
+  });
+}
 
 class Hub {
   constructor() {
@@ -82,6 +135,8 @@ class Hub {
     );
 
     client.on("error", logButNotRethrowException(debug));
+
+    setZeroconfName().catch(logButNotRethrowException(debug));
   }
 
   onStateChange(cb) {
