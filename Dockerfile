@@ -11,6 +11,4 @@ COPY rootfs /
 COPY app /app
 COPY envs/prod /app/.env
 
-COPY custom_components/lartec /config/custom_components/lartec
-
 EXPOSE 4000

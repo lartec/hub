@@ -21,6 +21,19 @@ debug("MQTT_USER", MQTT_USER);
 debug("MQTT_PASSWORD <secret>");
 debug("MQTT_SERVER", MQTT_SERVER);
 
+const fetchSupervisor = async (url, { headers, ...rest } = {}) =>
+  await fetch(`http://supervisor/${url}`, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer: ${process.env.SUPERVISOR_TOKEN}`,
+      ...headers,
+    },
+    ...rest,
+  });
+
+const fetchCore = async (url, opts) =>
+  await fetchSupervisor(`core/api/${url}`, opts);
+
 /**
  * MQTT
  */
@@ -37,12 +50,7 @@ const jsonParse = (payload) =>
  * Android app.
  */
 async function setZeroconfName() {
-  const res = await fetch("http://supervisor/network/info", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer: ${process.env.SUPERVISOR_TOKEN}`,
-    },
-  });
+  const res = await fetchSupervisor("network/info");
   if (!res.ok) {
     throw new Error(`Couldn't setup zeroconf: ${await res.text()}`);
   }
@@ -144,6 +152,10 @@ class Hub {
   }
   onZigbeeEvent(cb) {
     this.ee.on("zigbeeEvent", cb);
+  }
+
+  async getStates() {
+    return await (await fetchCore("states")).json();
   }
 
   // deviceId example: 0xb4e3f9fffef96753

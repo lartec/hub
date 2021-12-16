@@ -7,6 +7,9 @@ const { logExceptions } = require("./util");
 
 const port = process.env.PORT || 4000;
 
+/**
+ * Listen to machine and cloud events
+ */
 hubMachine.onStateChange(
   logExceptions(async function (eventData) {
     await hubCloud.addEvent(eventData);
@@ -36,6 +39,9 @@ app.get("/", (req, res) => {
   res.json({ data: "Go to https://lar.tec.br" });
 });
 
+/**
+ * Listen to http server events
+ */
 // GET /manifest
 app.get("/manifest", (req, res) => {
   res.json({ hubId: hubCloud.props.id });
