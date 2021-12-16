@@ -309,6 +309,29 @@ class Hub {
         { merge: true }
       );
     }
+    if (eventType === "state_changed" && entityId === "sun.sun") {
+      const {
+        newState: {
+          context, // eslint-disable-line no-unused-vars
+          entityId: _, // eslint-disable-line no-unused-vars
+          ...newState
+        },
+        oldState: {
+          context: __, // eslint-disable-line no-unused-vars
+          entityId: ___, // eslint-disable-line no-unused-vars
+          ...oldState
+        },
+      } = data;
+      await this.docRef().set(
+        {
+          sun: {
+            newState,
+            oldState,
+          },
+        },
+        { merge: true }
+      );
+    }
   }
 
   async addZigbeeEvent({ topic, data }) {

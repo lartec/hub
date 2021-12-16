@@ -39,6 +39,8 @@ echo 'export MQTT_PASSWORD="'$MQTT_PASSWORD'"' >> /data/envs
 echo 'export MQTT_SERVER="'$MQTT_SERVER'"' >> /data/envs
 
 # LarTec custom_component
+mkdir -p /config/custom_components/lartec
+cp -a /custom_components/lartec/* /config/custom_components/lartec/
 yq e '.lartec=true' -i /config/configuration.yaml
 
 bashio::log.info "LarTec Hub App: Install npm dependencies..."
