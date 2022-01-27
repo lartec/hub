@@ -279,7 +279,23 @@ class Hub {
     } else {
       // On normal mode, add the switch ones.
       if (eventType === "state_changed" && entityId.startsWith("switch.")) {
-        await addHubsEvents();
+        // Immediately in case state has changed
+        // 1: Temporary workaround for different boards with several states, let them all go.
+        if (
+          data.newState.state !== data.oldState.state ||
+          data.newState.state_l1 /* 1 */
+        ) {
+          await addHubsEvents();
+
+          // Debounce other events every 30mins
+        } else {
+          debug(`- IGNORING THIS ONE FOR NOW`);
+          // if (new Date().getTime() - lastBatchedHubsEventTime < 30 * mins) {
+          // debug(`- debouncing this one, will actually send it in the next batch!`);
+          // } else {
+          //   await sendHubsEventsBatch();
+          // }
+        }
       }
     }
 
