@@ -35,7 +35,7 @@ async def on_events(hass: HomeAssistant) -> None:
     # hass.bus.async_listen(MATCH_ALL, forward_event)
 
     # State changed events only
-    def on_events(event: Event) -> None:
+    async def on_events(event: Event) -> None:
         """Forward state changed events to mqtt (except time changed ones)."""
         _LOGGER.info("On state changed events...")
         event_dict = event.as_dict()
@@ -45,7 +45,9 @@ async def on_events(hass: HomeAssistant) -> None:
             event_dict["data"]["old_state"] = event.data["old_state"].as_dict()
         _LOGGER.info(event_dict)
         try:
-            hass.components.mqtt.async_publish("lartec/event", json.dumps(event_dict))
+            # Gotta use `hass` as first argument.
+            # TODO: Figure out why?
+            await hass.components.mqtt.async_publish(hass, "lartec/event", json.dumps(event_dict))
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception(err)
     hass.bus.async_listen(EVENT_STATE_CHANGED, on_events)
@@ -62,7 +64,7 @@ async def remote_set_state(hass: HomeAssistant) -> None:
     # await hass.components.mqtt.async_subscribe('lartec/setState', message_received)
 
     @callback
-    async def async_set_state(topic: str, payload: str, qos: int) -> None:
+    async def set_state(topic: str, payload: str, qos: int) -> None:
         """A new MQTT message has been received."""
         payload_data = json.loads(payload);
         domain = "homeassistant"
@@ -84,7 +86,9 @@ async def remote_set_state(hass: HomeAssistant) -> None:
             )
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception(err)
-    await hass.components.mqtt.async_subscribe('lartec/setState', async_set_state)
+    # Gotta use `hass` as first argument.
+    # TODO: Figure out why?
+    await hass.components.mqtt.async_subscribe('lartec/setState', set_state)
 
 #
 # 
@@ -107,12 +111,6 @@ async def remote_software_update(hass: HomeAssistant) -> None:
 #
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Setup our skeleton component."""
-    @callback
-    def message_received(topic: str, payload: str, qos: int) -> None:
-        """A new MQTT message has been received."""
-        hass.components.mqtt.async_publish("lartec/foo", "Works! 4")
-    await hass.components.mqtt.async_subscribe('lartec/init', message_received)
-
     # On events
     await on_events(hass)
 
