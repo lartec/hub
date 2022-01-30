@@ -2,10 +2,16 @@ const EventEmitter = require("events");
 const bonjour = require("bonjour")();
 const debug = require("debug")("app:machine");
 const fetch = require("node-fetch");
+const fs = require("fs");
 const mqtt = require("mqtt");
+const util = require("util");
+const YAML = require("yaml");
 
 const camelcaseKeys = require("camelcase-keys");
 const snakecaseKeys = require("snakecase-keys");
+
+const readFile = util.promisify(fs.readFile);
+const writeFile = util.promisify(fs.writeFile);
 
 const {
   logExceptions,
@@ -16,6 +22,7 @@ const {
 const MQTT_USER = process.env.MQTT_USER;
 const MQTT_PASSWORD = process.env.MQTT_PASSWORD;
 const MQTT_SERVER = process.env.MQTT_SERVER;
+const NODE_ENV = process.env.NODE_ENV;
 
 debug("MQTT_USER", MQTT_USER);
 debug("MQTT_PASSWORD <secret>");
@@ -86,6 +93,20 @@ async function setZeroconfName() {
       bonjour.unpublishAll();
     });
   });
+}
+
+/**
+ * Files
+ */
+// deviceName e.g., "0xb4e3f9fffec64aed"
+async function getHADeviceId(deviceName) {
+  const rawData = await readFile("~/config/.storage/core.device_registry");
+  const data = JSON.parse(rawData);
+  const found = data.data.devices.filter(({ name }) => name === deviceName);
+  if (found.length !== 1) {
+    // FIXME oops
+  }
+  return found[0].id;
 }
 
 class Hub {
@@ -160,7 +181,7 @@ class Hub {
 
   // deviceId example: 0xb4e3f9fffef96753
   // state example: "on", "off", "toggle"
-  async setState({ deviceId, state }) {
+  async setState({ eventData: { deviceId, state } }) {
     const entityId = `switch.${deviceId}`;
     const service = {
       on: "turn_on",
@@ -173,7 +194,152 @@ class Hub {
     );
   }
 
-  async setConfig() {
+  async setConfig({ hubProps: { devicesProps = {} } }) {
+    const automations = [];
+    const groups = {};
+
+    function addAutomation(deviceId, trigger, triggerSettings = {}, action) {
+      if (trigger === "manual") return;
+      if (trigger === "sleep") {
+        trigger === "schedule";
+        triggerSettings = { entries: [{ time: "23:00", repetition: "daily" }] };
+        //triggerSettings = { entries: [{time: "23:00", repetition: "daily", repetitionSettings: ["fri", "sat"]} ]};
+      }
+
+      if (trigger === "schedule") {
+        for (const eachTriggerSettings of triggerSettings.entries) {
+          addEachAutomation(deviceId, trigger, eachTriggerSettings, action);
+        }
+        return;
+      }
+
+      addEachAutomation(deviceId, trigger, triggerSettings, action);
+    }
+
+    function addEachAutomation(
+      deviceId,
+      trigger,
+      triggerSettings = {},
+      action
+    ) {
+      const automation = { mode: "single" };
+
+      if (trigger === "sunrise") {
+        automation.trigger = [{ platform: "sun", event: "sunrise" }];
+      } else if (trigger === "sunset") {
+        automation.trigger = [{ platform: "sun", event: "sunset" }];
+      } else if (trigger === "schedule") {
+        automation.trigger = [{ platform: "time", at: "4:00" }];
+        // repetition: daily
+        // repetition: theOtherDay
+        automation.condition = [
+          {
+            condition: "template",
+            value_template: "{{ now().timetuple().tm_yday % 2 == 0 }}",
+          },
+        ];
+
+        // repetition: 1In3
+        automation.condition = [
+          {
+            condition: "template",
+            value_template: "{{ now().timetuple().tm_yday % 3 == 0 }}",
+          },
+        ];
+
+        // repetition: weekday
+        automation.condition = [{ condition: "time", weekday: ["sat"] }];
+
+        // FIXME other days
+      } else if (trigger === "interval") {
+        const {
+          interval: { hour: hours, min: minutes, sec: seconds },
+        } = triggerSettings;
+        automation.trigger = [
+          {
+            platform: "device",
+            type: "turned_on",
+            device_id: getHADeviceId(deviceId),
+            entity_id: `switch.${deviceId}`,
+            domain: "switch",
+            for: {
+              hours,
+              minutes,
+              seconds,
+              milliseconds: 0,
+            },
+          },
+        ];
+      } else {
+        // FIXME oops
+      }
+
+      automation.action = [
+        {
+          service:
+            action === "on"
+              ? "homeassistant.turn_on"
+              : "homeassistant.turn_off",
+          entity_id: `switch.${deviceId}`,
+        },
+      ];
+      automations.push(automation);
+    }
+
+    function addGroupMember(group, member) {
+      groups[group] = groups[group] || {};
+      groups[group].entities = groups[group].entities || new Set();
+      // TODO: Make sure member is of the form switch.<>.
+      groups[group].entities.add(member);
+    }
+
+    Object.entries(devicesProps).map(
+      ([deviceId, { type, automation = {} } = {}]) => {
+        const { turnOn, turnOnSettings, turnOff, turnOffSettings } = automation;
+
+        if (type === "lighting") {
+          if (turnOn === "sunset" && turnOff === "sunrise") {
+            // All night
+            // - Make sure this automation exists.
+            addGroupMember("all_night_light", deviceId);
+          } else if (turnOn === "sunset" && turnOff === "sleep") {
+            // Night while awake
+            // - Make sure this automation exists.
+            addGroupMember("night_light_while_awake", deviceId);
+          } else if (
+            turnOn === "manual" &&
+            (turnOff === "sunrise" || turnOff === "sleep")
+          ) {
+            addAutomation(deviceId, turnOn, turnOnSettings, "on");
+            addAutomation(deviceId, turnOff, turnOffSettings, "off");
+          } else {
+            // FIXME: oops
+          }
+        }
+
+        // type: other (custom)
+        if (type === "other") {
+          if (!["manual", "sunrise", "sunset", "schedule"].includes(turnOn)) {
+            // FIXME: oops
+          }
+          if (!["sleep", "sunrise", "interval", "schedule"].includes(turnOff)) {
+            // FIXME: oops
+          }
+          addAutomation(deviceId, turnOn, turnOnSettings, "on");
+          addAutomation(deviceId, turnOff, turnOffSettings, "off");
+        }
+      }
+    );
+    // Rewrite config based on props
+    const groupsYaml = YAML.stringify(groups);
+    const automationsYaml = YAML.stringify(automations);
+    debug("Write groups.yaml\n", groupsYaml);
+    debug("Write automations.yaml\n", automationsYaml);
+    if (NODE_ENV === "production") {
+      await writeFile("~/config/groups.yaml", groupsYaml);
+      await writeFile("~/config/automations.yaml", automationsYaml);
+    }
+
     // Group reload:
     // call_service:
     //     "domain": "group",
