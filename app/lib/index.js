@@ -23,12 +23,16 @@ hubMachine.onZigbeeEvent(
 );
 
 hubCloud.onSetState(
-  logExceptions(async function (props) {
-    await hubMachine.setState(props);
+  logExceptions(async function (data) {
+    await hubMachine.setState(data);
   }, debug)
 );
 
-hubCloud.onSetConfig(logExceptions(async function () {}, debug));
+hubCloud.onSetConfig(
+  logExceptions(async function (data) {
+    await hubMachine.setConfig(data);
+  }, debug)
+);
 
 hubCloud.onAddNewDevice(logExceptions(async function () {}, debug));
 

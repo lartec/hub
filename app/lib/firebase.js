@@ -232,13 +232,18 @@ class Hub {
     if (!event) {
       throw new Error("Missing action listener");
     }
-    const isListened = this.ee.emit(event, rest);
+    const isListened = this.ee.emit(event, {
+      eventData: rest,
+      hubProps: this.props,
+    });
     debug(`emit ${event} ${rest}`);
     if (isListened) {
       db.collection("hubsActionsQueue")
         .doc(id)
         .delete()
         .catch(logAndRethrowException);
+    } else {
+      // FIXME: retry / throw exception?
     }
   }
 
