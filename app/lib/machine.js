@@ -231,7 +231,7 @@ class Hub {
       if (trigger === "manual") return;
       if (trigger === "sleep") {
         debug("transforming sleep into schedule");
-        trigger === "schedule";
+        trigger = "schedule";
         triggerSettings = {
           entries: [
             {
