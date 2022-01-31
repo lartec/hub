@@ -274,6 +274,8 @@ class Hub {
         }
 
         // Time
+        console.log(typeof time);
+        console.log(JSON.stringify({time}));
         automation.trigger = [
           { platform: "time", at: hourMinISOFmt(new Date(time)) },
         ];
