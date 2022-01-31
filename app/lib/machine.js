@@ -274,10 +274,8 @@ class Hub {
         }
 
         // Time
-        console.log(typeof time);
-        console.log(JSON.stringify({time}));
         automation.trigger = [
-          { platform: "time", at: hourMinISOFmt(new Date(time)) },
+          { platform: "time", at: hourMinISOFmt(time.toDate()) },
         ];
       } else if (trigger === "interval") {
         const {
