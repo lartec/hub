@@ -111,6 +111,9 @@ async function getHADeviceId(deviceName) {
   return found[0].id;
 }
 
+const hourMinISOFmt = (date) =>
+  date.toISOString().split("T")[1].split(":").slice(0, 2).join(":");
+
 class Hub {
   constructor() {
     this.ee = new EventEmitter();
@@ -208,9 +211,12 @@ class Hub {
     ) {
       if (trigger === "manual") return;
       if (trigger === "sleep") {
+        const time = new Date();
+        time.setUTCHours(23);
+        time.setUTCMinutes(0);
         trigger === "schedule";
-        triggerSettings = { entries: [{ time: "23:00", repetition: "daily" }] };
-        //triggerSettings = { entries: [{time: "23:00", repetition: "daily", repetitionSettings: ["fri", "sat"]} ]};
+        triggerSettings = { entries: [{ time, repetition: "daily" }] };
+        //triggerSettings = { entries: [{time: "23:00", repetition: "custom", repetitionSettings: ["fri", "sat"]} ]};
       }
 
       if (trigger === "schedule") {
@@ -241,28 +247,36 @@ class Hub {
       } else if (trigger === "sunset") {
         automation.trigger = [{ platform: "sun", event: "sunset" }];
       } else if (trigger === "schedule") {
-        automation.trigger = [{ platform: "time", at: "4:00" }];
-        // repetition: daily
-        // repetition: theOtherDay
-        automation.condition = [
-          {
-            condition: "template",
-            value_template: "{{ now().timetuple().tm_yday % 2 == 0 }}",
-          },
+        const { repetition, repetitionSettings, time } = triggerSettings;
+        // Repetition
+        if (repetition === "daily") {
+          // No condition needed when it's daily.
+        } else if (repetition === "theOtherDay") {
+          automation.condition = [
+            {
+              condition: "template",
+              value_template: "{{ now().timetuple().tm_yday % 2 == 0 }}",
+            },
+          ];
+        } else if (repetition === "1In3") {
+          automation.condition = [
+            {
+              condition: "template",
+              value_template: "{{ now().timetuple().tm_yday % 3 == 0 }}",
+            },
+          ];
+        } else if (repetition === "custom") {
+          automation.condition = [
+            { condition: "time", weekday: repetitionSettings },
+          ];
+        } else {
+          // FIXME oops
+        }
+
+        // Time
+        automation.trigger = [
+          { platform: "time", at: hourMinISOFmt(new Date(time)) },
         ];
-
-        // repetition: 1In3
-        automation.condition = [
-          {
-            condition: "template",
-            value_template: "{{ now().timetuple().tm_yday % 3 == 0 }}",
-          },
-        ];
-
-        // repetition: weekday
-        automation.condition = [{ condition: "time", weekday: ["sat"] }];
-
-        // FIXME other days
       } else if (trigger === "interval") {
         const {
           interval: { hour: hours, min: minutes, sec: seconds },
