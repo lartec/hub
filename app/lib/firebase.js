@@ -268,6 +268,10 @@ class Hub {
     await this.auth();
     const { logLevel } = this.props;
     const { eventType, data } = eventProps;
+    if (data.newState === null) {
+      debug("ignoring event, because it lacks of newState");
+      return;
+    }
     const { entityId } = data.newState;
 
     const addHubsEvents = async () => {

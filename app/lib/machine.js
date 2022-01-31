@@ -161,10 +161,6 @@ class Hub {
         if (topic === "lartec/event") {
           const data = jsonParse(payload);
           classDebug("emit onStateChange event", topic, data);
-          if (data.newState === null) {
-            debug("ignoring event, because it lacks of newState");
-            return;
-          }
           this.ee.emit("stateChange", data);
           return;
         }
@@ -340,9 +336,9 @@ class Hub {
 
     function addGroupMember(group, member) {
       groups[group] = groups[group] || {};
-      groups[group].entities = groups[group].entities || new Set();
+      groups[group].entities = groups[group].entities || [];
       // TODO: Make sure member is of the form switch.<>.
-      groups[group].entities.add(member);
+      groups[group].entities.push(member);
     }
 
     await addAutomation("group.night_light", "sunset", {}, "on");
@@ -389,7 +385,7 @@ class Hub {
     }
 
     // Rewrite config based on props
-    if (groups.length) {
+    if (Object.keys(groups).length) {
       const groupsYaml = YAMLStringify(groups);
       debug("Write groups.yaml\n", groupsYaml);
       if (NODE_ENV === "production") {
@@ -397,7 +393,7 @@ class Hub {
       }
     }
 
-    if (Object.keys(automations).length) {
+    if (automations.length) {
       const automationsYaml = YAMLStringify(automations);
       debug("Write automations.yaml\n", automationsYaml);
       if (NODE_ENV === "production") {
