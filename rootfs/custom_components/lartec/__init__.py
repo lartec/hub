@@ -47,7 +47,7 @@ async def on_events(hass: HomeAssistant) -> None:
         try:
             # Gotta use `hass` as first argument.
             # TODO: Figure out why?
-            await hass.components.mqtt.async_publish(hass, "lartec/event", json.dumps(event_dict))
+            await hass.components.mqtt.async_publish(hass, "lartec/event", json.dumps(event_dict, default=str))
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.exception(err)
     hass.bus.async_listen(EVENT_STATE_CHANGED, on_events)

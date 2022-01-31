@@ -113,6 +113,13 @@ async function getHADeviceId(deviceName) {
   return found[0].id;
 }
 
+function getHAEntityId(deviceName) {
+  if (deviceName.indexOf(".") !== -1) {
+    return deviceName;
+  }
+  return `switch.${deviceName}`;
+}
+
 const hourMinSecISOFmt = (date) =>
   date
     .toISOString()
@@ -219,13 +226,19 @@ class Hub {
     ) {
       if (trigger === "manual") return;
       if (trigger === "sleep") {
-        const time = new Date();
-        time.setUTCHours(23);
-        time.setUTCMinutes(0);
-        time.setUTCSeconds(0);
-        trigger === "schedule";
-        triggerSettings = { entries: [{ time, repetition: "daily" }] };
-        //triggerSettings = { entries: [{time: "23:00", repetition: "custom", repetitionSettings: ["fri", "sat"]} ]};
+        trigger = "schedule";
+        triggerSettings = {
+          entries: [
+            {
+              time: {
+                toDate() {
+                  return new Date("2022-01-01T23:00:00-03:00");
+                },
+              },
+              repetition: "daily",
+            },
+          ],
+        };
       }
 
       if (trigger === "schedule") {
@@ -295,7 +308,7 @@ class Hub {
             platform: "device",
             type: "turned_on",
             device_id: await getHADeviceId(deviceId),
-            entity_id: `switch.${deviceId}`,
+            entity_id: getHAEntityId(deviceId),
             domain: "switch",
             for: {
               hours,
@@ -315,7 +328,7 @@ class Hub {
             action === "on"
               ? "homeassistant.turn_on"
               : "homeassistant.turn_off",
-          entity_id: `switch.${deviceId}`,
+          entity_id: getHAEntityId(deviceId),
         },
       ];
       automations.push(automation);
@@ -323,10 +336,14 @@ class Hub {
 
     function addGroupMember(group, member) {
       groups[group] = groups[group] || {};
-      groups[group].entities = groups[group].entities || new Set();
+      groups[group].entities = groups[group].entities || [];
       // TODO: Make sure member is of the form switch.<>.
-      groups[group].entities.add(member);
+      groups[group].entities.push(getHAEntityId(member));
     }
+
+    await addAutomation("group.night_light", "sunset", {}, "on");
+    await addAutomation("group.night_light", "sunrise", {}, "off");
+    await addAutomation("group.night_light_while_awake", "sleep", {}, "off");
 
     for (const [deviceId, { type, automation = {} } = {}] of Object.entries(
       devicesProps
@@ -337,10 +354,11 @@ class Hub {
         if (turnOn === "sunset" && turnOff === "sunrise") {
           // All night
           // - Make sure this automation exists.
-          addGroupMember("all_night_light", deviceId);
+          addGroupMember("night_light", deviceId);
         } else if (turnOn === "sunset" && turnOff === "sleep") {
           // Night while awake
           // - Make sure this automation exists.
+          addGroupMember("night_light", deviceId);
           addGroupMember("night_light_while_awake", deviceId);
         } else if (
           turnOn === "manual" &&
@@ -367,38 +385,38 @@ class Hub {
     }
 
     // Rewrite config based on props
-    if (groups.length) {
-      const groupsYaml = YAMLStringify(groups);
-      debug("Write groups.yaml\n", groupsYaml);
-      if (NODE_ENV === "production") {
-        await writeFile("/config/groups.yaml", groupsYaml);
-      }
+    const groupsYaml = YAMLStringify(groups);
+    debug("Write groups.yaml\n", groupsYaml);
+    if (NODE_ENV === "production") {
+      await writeFile("/config/groups.yaml", groupsYaml);
     }
 
-    if (Object.keys(automations).length) {
-      const automationsYaml = YAMLStringify(automations);
-      debug("Write automations.yaml\n", automationsYaml);
-      if (NODE_ENV === "production") {
-        await writeFile("/config/automations.yaml", automationsYaml);
-      }
+    const automationsYaml = YAMLStringify(automations);
+    debug("Write automations.yaml\n", automationsYaml);
+    if (NODE_ENV === "production") {
+      await writeFile("/config/automations.yaml", automationsYaml);
     }
 
-    // Group reload:
-    // call_service:
-    //     "domain": "group",
-    //     "service": "reload",
-    //     "service_data": {}
-    // },
-    //
-    // Automation reload
-    //     "domain": "automation",
-    //     "service": "reload",
-    //     "service_data": {}
-    //
-    // POST http://supervisor/core/api/...
-    // -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" -H "Content-Type: application/json"
-    // POST /api/services/group/reload
-    // POST /api/services/automation/reload
+    // Reload config:
+    let res = await fetchCore("config/core/check_config", { method: "POST" });
+    if (!res.ok) {
+      throw new Error(`Couldn't reload group: ${await res.text()}`);
+    }
+    if ((await res.json()).result !== "valid") {
+      throw new Error("Config is invalid. Aborting...");
+    }
+
+    res = await fetchCore("services/group/reload", { method: "POST" });
+    if (!res.ok) {
+      throw new Error(`Couldn't reload group: ${await res.text()}`);
+    }
+    debug("Group config reloaded");
+
+    res = await fetchCore("services/automation/reload", { method: "POST" });
+    if (!res.ok) {
+      throw new Error(`Couldn't reload automation: ${await res.text()}`);
+    }
+    debug("Automation config reloaded");
   }
 
   async addNewDevice() {
