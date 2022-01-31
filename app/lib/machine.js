@@ -161,6 +161,10 @@ class Hub {
         if (topic === "lartec/event") {
           const data = jsonParse(payload);
           classDebug("emit onStateChange event", topic, data);
+          if (data.newState === null) {
+            debug("ignoring event, because it lacks of newState");
+            return;
+          }
           this.ee.emit("stateChange", data);
           return;
         }
@@ -236,6 +240,7 @@ class Hub {
                   time.setUTCHours(23);
                   time.setUTCMinutes(0);
                   time.setUTCSeconds(0);
+                  debug("toDate", time);
                   return time;
                 },
               },
@@ -243,7 +248,6 @@ class Hub {
             },
           ],
         };
-        //triggerSettings = { entries: [{time: "23:00", repetition: "custom", repetitionSettings: ["fri", "sat"]} ]};
       }
 
       if (trigger === "schedule") {
