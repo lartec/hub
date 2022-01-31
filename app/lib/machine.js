@@ -113,6 +113,13 @@ async function getHADeviceId(deviceName) {
   return found[0].id;
 }
 
+function getHAEntityId(deviceName) {
+  if (deviceName.indexOf(".") !== -1) {
+    return deviceName;
+  }
+  return `switch.${deviceName}`;
+}
+
 const hourMinSecISOFmt = (date) =>
   date
     .toISOString()
@@ -306,7 +313,7 @@ class Hub {
             platform: "device",
             type: "turned_on",
             device_id: await getHADeviceId(deviceId),
-            entity_id: `switch.${deviceId}`,
+            entity_id: getHAEntityId(deviceId),
             domain: "switch",
             for: {
               hours,
@@ -326,7 +333,7 @@ class Hub {
             action === "on"
               ? "homeassistant.turn_on"
               : "homeassistant.turn_off",
-          entity_id: `switch.${deviceId}`,
+          entity_id: getHAEntityId(deviceId),
         },
       ];
       automations.push(automation);
@@ -339,6 +346,10 @@ class Hub {
       groups[group].entities.add(member);
     }
 
+    await addAutomation("group.night_light", "sunset", {}, "on");
+    await addAutomation("group.night_light", "sunrise", {}, "off");
+    await addAutomation("group.night_light_while_awake", "sleep", {}, "off");
+
     for (const [deviceId, { type, automation = {} } = {}] of Object.entries(
       devicesProps
     )) {
@@ -348,10 +359,11 @@ class Hub {
         if (turnOn === "sunset" && turnOff === "sunrise") {
           // All night
           // - Make sure this automation exists.
-          addGroupMember("all_night_light", deviceId);
+          addGroupMember("night_light", deviceId);
         } else if (turnOn === "sunset" && turnOff === "sleep") {
           // Night while awake
           // - Make sure this automation exists.
+          addGroupMember("night_light", deviceId);
           addGroupMember("night_light_while_awake", deviceId);
         } else if (
           turnOn === "manual" &&
