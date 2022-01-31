@@ -338,7 +338,7 @@ class Hub {
       groups[group] = groups[group] || {};
       groups[group].entities = groups[group].entities || [];
       // TODO: Make sure member is of the form switch.<>.
-      groups[group].entities.push(member);
+      groups[group].entities.push(getHAEntityId(member));
     }
 
     await addAutomation("group.night_light", "sunset", {}, "on");
