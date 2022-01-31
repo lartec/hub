@@ -100,7 +100,7 @@ async function setZeroconfName() {
  */
 // deviceName e.g., "0xb4e3f9fffec64aed"
 async function getHADeviceId(deviceName) {
-  const rawData = await readFile("~/config/.storage/core.device_registry");
+  const rawData = await readFile("/config/.storage/core.device_registry");
   const data = JSON.parse(rawData);
   const found = data.data.devices.filter(({ name }) => name === deviceName);
   if (found.length !== 1) {
@@ -331,13 +331,20 @@ class Hub {
       }
     );
     // Rewrite config based on props
-    const groupsYaml = YAML.stringify(groups);
-    const automationsYaml = YAML.stringify(automations);
-    debug("Write groups.yaml\n", groupsYaml);
-    debug("Write automations.yaml\n", automationsYaml);
-    if (NODE_ENV === "production") {
-      await writeFile("~/config/groups.yaml", groupsYaml);
-      await writeFile("~/config/automations.yaml", automationsYaml);
+    if (groups.length) {
+      const groupsYaml = YAML.stringify(groups);
+      debug("Write groups.yaml\n", groupsYaml);
+      if (NODE_ENV === "production") {
+        await writeFile("/config/groups.yaml", groupsYaml);
+      }
+    }
+
+    if (Object.keys(automations).length) {
+      const automationsYaml = YAML.stringify(automations);
+      debug("Write automations.yaml\n", automationsYaml);
+      if (NODE_ENV === "production") {
+        await writeFile("/config/automations.yaml", automationsYaml);
+      }
     }
 
     // Group reload:
