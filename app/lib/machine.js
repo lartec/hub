@@ -219,12 +219,23 @@ class Hub {
     ) {
       if (trigger === "manual") return;
       if (trigger === "sleep") {
-        const time = new Date();
-        time.setUTCHours(23);
-        time.setUTCMinutes(0);
-        time.setUTCSeconds(0);
         trigger === "schedule";
-        triggerSettings = { entries: [{ time, repetition: "daily" }] };
+        triggerSettings = {
+          entries: [
+            {
+              time: {
+                toDate() {
+                  const time = new Date();
+                  time.setUTCHours(23);
+                  time.setUTCMinutes(0);
+                  time.setUTCSeconds(0);
+                  return time;
+                },
+              },
+              repetition: "daily",
+            },
+          ],
+        };
         //triggerSettings = { entries: [{time: "23:00", repetition: "custom", repetitionSettings: ["fri", "sat"]} ]};
       }
 
@@ -383,22 +394,26 @@ class Hub {
       }
     }
 
-    // Group reload:
-    // call_service:
-    //     "domain": "group",
-    //     "service": "reload",
-    //     "service_data": {}
-    // },
-    //
-    // Automation reload
-    //     "domain": "automation",
-    //     "service": "reload",
-    //     "service_data": {}
-    //
-    // POST http://supervisor/core/api/...
-    // -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" -H "Content-Type: application/json"
-    // POST /api/services/group/reload
-    // POST /api/services/automation/reload
+    // Reload config:
+    let res = await fetchCore("config/core/check_config");
+    if (!res.ok) {
+      throw new Error(`Couldn't reload group: ${await res.text()}`);
+    }
+    if ((await res.json()).result !== "valid") {
+      throw new Error("Config is invalid. Aborting...");
+    }
+
+    res = await fetchCore("services/group/reload");
+    if (!res.ok) {
+      throw new Error(`Couldn't reload group: ${await res.text()}`);
+    }
+    debug("Group config reloaded");
+
+    res = await fetchCore("services/automation/reload");
+    if (!res.ok) {
+      throw new Error(`Couldn't reload automation: ${await res.text()}`);
+    }
+    debug("Automation config reloaded");
   }
 
   async addNewDevice() {
