@@ -11,4 +11,6 @@ COPY rootfs /
 COPY app /app
 COPY envs/prod /app/.env
 
+RUN cd /app && npm i --prod
+
 EXPOSE 4000
