@@ -111,8 +111,14 @@ async function getHADeviceId(deviceName) {
   return found[0].id;
 }
 
-const hourMinISOFmt = (date) =>
-  date.toISOString().split("T")[1].split(":").slice(0, 2).join(":");
+const hourMinSecISOFmt = (date) =>
+  date
+    .toISOString()
+    .split("T")[1]
+    .split(".")[0]
+    .split(":")
+    .slice(0, 3)
+    .join(":");
 
 class Hub {
   constructor() {
@@ -214,6 +220,7 @@ class Hub {
         const time = new Date();
         time.setUTCHours(23);
         time.setUTCMinutes(0);
+        time.setUTCSeconds(0);
         trigger === "schedule";
         triggerSettings = { entries: [{ time, repetition: "daily" }] };
         //triggerSettings = { entries: [{time: "23:00", repetition: "custom", repetitionSettings: ["fri", "sat"]} ]};
@@ -275,7 +282,7 @@ class Hub {
 
         // Time
         automation.trigger = [
-          { platform: "time", at: hourMinISOFmt(time.toDate()) },
+          { platform: "time", at: hourMinSecISOFmt(time.toDate()) },
         ];
       } else if (trigger === "interval") {
         const {
