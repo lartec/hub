@@ -230,26 +230,19 @@ class Hub {
     ) {
       if (trigger === "manual") return;
       if (trigger === "sleep") {
-        debug("transforming sleep into schedule");
         trigger = "schedule";
         triggerSettings = {
           entries: [
             {
               time: {
                 toDate() {
-                  const time = new Date();
-                  time.setUTCHours(23);
-                  time.setUTCMinutes(0);
-                  time.setUTCSeconds(0);
-                  debug("toDate", time);
-                  return time;
+                  return new Date("2022-01-01T23:00:00-03:00");
                 },
               },
               repetition: "daily",
             },
           ],
         };
-        debug(triggerSettings);
       }
 
       if (trigger === "schedule") {
@@ -280,7 +273,6 @@ class Hub {
       } else if (trigger === "sunset") {
         automation.trigger = [{ platform: "sun", event: "sunset" }];
       } else if (trigger === "schedule") {
-        debug("schedule", triggerSettings);
         const { repetition, repetitionSettings, time } = triggerSettings;
         // Repetition
         if (repetition === "daily") {
@@ -308,7 +300,6 @@ class Hub {
         }
 
         // Time
-        debug("-trigger time", hourMinSecISOFmt(time.toDate()));
         automation.trigger = [
           { platform: "time", at: hourMinSecISOFmt(time.toDate()) },
         ];
