@@ -395,7 +395,7 @@ class Hub {
     }
 
     // Reload config:
-    let res = await fetchCore("config/core/check_config");
+    let res = await fetchCore("config/core/check_config", { method: "POST" });
     if (!res.ok) {
       throw new Error(`Couldn't reload group: ${await res.text()}`);
     }
@@ -403,13 +403,13 @@ class Hub {
       throw new Error("Config is invalid. Aborting...");
     }
 
-    res = await fetchCore("services/group/reload");
+    res = await fetchCore("services/group/reload", { method: "POST" });
     if (!res.ok) {
       throw new Error(`Couldn't reload group: ${await res.text()}`);
     }
     debug("Group config reloaded");
 
-    res = await fetchCore("services/automation/reload");
+    res = await fetchCore("services/automation/reload", { method: "POST" });
     if (!res.ok) {
       throw new Error(`Couldn't reload automation: ${await res.text()}`);
     }
