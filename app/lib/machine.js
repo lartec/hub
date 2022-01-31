@@ -13,6 +13,8 @@ const snakecaseKeys = require("snakecase-keys");
 const readFile = util.promisify(fs.readFile);
 const writeFile = util.promisify(fs.writeFile);
 
+const YAMLStringify = (data) => YAML.stringify(data, { version: "1.1" });
+
 const {
   logExceptions,
   logAndRethrowException,
@@ -366,7 +368,7 @@ class Hub {
 
     // Rewrite config based on props
     if (groups.length) {
-      const groupsYaml = YAML.stringify(groups);
+      const groupsYaml = YAMLStringify(groups);
       debug("Write groups.yaml\n", groupsYaml);
       if (NODE_ENV === "production") {
         await writeFile("/config/groups.yaml", groupsYaml);
@@ -374,7 +376,7 @@ class Hub {
     }
 
     if (Object.keys(automations).length) {
-      const automationsYaml = YAML.stringify(automations);
+      const automationsYaml = YAMLStringify(automations);
       debug("Write automations.yaml\n", automationsYaml);
       if (NODE_ENV === "production") {
         await writeFile("/config/automations.yaml", automationsYaml);
