@@ -230,6 +230,7 @@ class Hub {
     ) {
       if (trigger === "manual") return;
       if (trigger === "sleep") {
+        debug("transforming sleep into schedule");
         trigger === "schedule";
         triggerSettings = {
           entries: [
@@ -248,6 +249,7 @@ class Hub {
             },
           ],
         };
+        debug(triggerSettings);
       }
 
       if (trigger === "schedule") {
@@ -278,6 +280,7 @@ class Hub {
       } else if (trigger === "sunset") {
         automation.trigger = [{ platform: "sun", event: "sunset" }];
       } else if (trigger === "schedule") {
+        debug("schedule", triggerSettings);
         const { repetition, repetitionSettings, time } = triggerSettings;
         // Repetition
         if (repetition === "daily") {
@@ -305,6 +308,7 @@ class Hub {
         }
 
         // Time
+        debug("-trigger time", hourMinSecISOFmt(time.toDate()));
         automation.trigger = [
           { platform: "time", at: hourMinSecISOFmt(time.toDate()) },
         ];
