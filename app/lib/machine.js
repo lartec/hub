@@ -385,20 +385,16 @@ class Hub {
     }
 
     // Rewrite config based on props
-    if (Object.keys(groups).length) {
-      const groupsYaml = YAMLStringify(groups);
-      debug("Write groups.yaml\n", groupsYaml);
-      if (NODE_ENV === "production") {
-        await writeFile("/config/groups.yaml", groupsYaml);
-      }
+    const groupsYaml = YAMLStringify(groups);
+    debug("Write groups.yaml\n", groupsYaml);
+    if (NODE_ENV === "production") {
+      await writeFile("/config/groups.yaml", groupsYaml);
     }
 
-    if (automations.length) {
-      const automationsYaml = YAMLStringify(automations);
-      debug("Write automations.yaml\n", automationsYaml);
-      if (NODE_ENV === "production") {
-        await writeFile("/config/automations.yaml", automationsYaml);
-      }
+    const automationsYaml = YAMLStringify(automations);
+    debug("Write automations.yaml\n", automationsYaml);
+    if (NODE_ENV === "production") {
+      await writeFile("/config/automations.yaml", automationsYaml);
     }
 
     // Reload config:
