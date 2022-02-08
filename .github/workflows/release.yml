@@ -27,5 +27,5 @@ jobs:
         with:
           args: |
             --all \
-            --target addon-folder \
-            --docker-hub user-name-or-space-name
+            --target . \
+            --docker-hub lartec
