@@ -4,14 +4,10 @@ const debug = require("debug")("app:machine");
 const fetch = require("node-fetch");
 const fs = require("fs");
 const mqtt = require("mqtt");
-const util = require("util");
 const YAML = require("yaml");
 
 const camelcaseKeys = require("camelcase-keys");
 const snakecaseKeys = require("snakecase-keys");
-
-const readFile = util.promisify(fs.readFile);
-const writeFile = util.promisify(fs.writeFile);
 
 const YAMLStringify = (data) => YAML.stringify(data, { version: "1.1" });
 
@@ -102,11 +98,13 @@ async function setZeroconfName() {
  */
 // deviceName e.g., "0xb4e3f9fffec64aed"
 async function getHADeviceId(deviceName) {
-  const rawData = await readFile("/config/.storage/core.device_registry");
+  const rawData = await fs.promises.readFile(
+    "/config/.storage/core.device_registry"
+  );
   const data = JSON.parse(rawData);
-  console.log(data);
+  // If deviceName is "0xa4c13886429e3a54_l1" (e.g., TuYa with multiple entities), get "0xa4c13886429e3a54".
+  deviceName = deviceName.split("_")[0];
   const found = data.data.devices.filter(({ name }) => name === deviceName);
-  console.log(found);
   if (found.length !== 1) {
     // FIXME oops
   }
@@ -388,13 +386,13 @@ class Hub {
     const groupsYaml = YAMLStringify(groups);
     debug("Write groups.yaml\n", groupsYaml);
     if (NODE_ENV === "production") {
-      await writeFile("/config/groups.yaml", groupsYaml);
+      await fs.promises.writeFile("/config/groups.yaml", groupsYaml);
     }
 
     const automationsYaml = YAMLStringify(automations);
     debug("Write automations.yaml\n", automationsYaml);
     if (NODE_ENV === "production") {
-      await writeFile("/config/automations.yaml", automationsYaml);
+      await fs.promises.writeFile("/config/automations.yaml", automationsYaml);
     }
 
     // Reload config:
