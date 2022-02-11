@@ -1,6 +1,6 @@
 {
   "name": "LarTec",
-  "version": "1.0.2",
+  "version": "1.0.2-1",
   "slug": "lartec-hub",
   "description": "LarTec",
   "homeassistant_api": true,
