@@ -391,23 +391,9 @@ class Hub {
 
     let automationsYaml = YAMLStringify(automations);
 
-    if (
-      await fs.promises
-        .stat("/config/custom_automations.yaml")
-        .then(() => true)
-        .catch((error) => {
-          if (error.code === "ENOENT") return false;
-          throw error;
-        })
-    ) {
-      debug("Found custom_automations.yaml, including it as well.\n");
-      automationsYaml += `\n${String(
-        await fs.promises.readFile("/config/custom_automations.yaml")
-      )}`;
-    }
     debug("Write automations.yaml\n", automationsYaml);
     if (NODE_ENV === "production") {
-      await fs.promises.writeFile("/config/automations.yaml", automationsYaml);
+      await fs.promises.writeFile("/config/automations/lartec.yaml", automationsYaml);
     }
 
     // Reload config:
