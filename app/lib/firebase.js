@@ -119,8 +119,8 @@ class Hub {
     this.ee.on("onSetState", cb);
   }
 
-  onSetConfig(cb) {
-    this.ee.on("onSetConfig", cb);
+  onPropsChange(cb) {
+    this.ee.on("onPropsChange", cb);
   }
 
   onAddNewDevice(cb) {
@@ -128,7 +128,6 @@ class Hub {
   }
 
   actionsQueue() {
-    db.collection("hubsActionsQueue").where("hubId", "==", this.props.id);
     return db
       .collection("hubsActionsQueue")
       .where("hubId", "==", this.props.id);
@@ -210,9 +209,16 @@ class Hub {
     debug(`AUTH successful ${auth.user.uid}`);
     this.set({ id: auth.user.uid });
 
-    // Listen to realtime udpates
+    // Listen to realtime udpates (including initial state)
     this.realtimeUnsubscribe1 = this.docRef().onSnapshot((doc) => {
-      this.set(doc.data());
+      const data = doc.data();
+      this.set(data);
+      debug(`emit onPropsChange`, data);
+      this.ee.emit("onPropsChange", data, {
+        rollbackCb: async (data) => {
+          await this.docRef().set(data, { merge: true });
+        },
+      });
     });
     this.realtimeUnsubscribe2 = this.actionsQueue().onSnapshot(
       (querySnapshot) => {
@@ -226,16 +232,12 @@ class Hub {
     const { action, ...rest } = doc.data();
     const event = {
       addNewDevice: "onAddNewDevice",
-      setConfig: "onSetConfig",
       setState: "onSetState",
     }[action];
     if (!event) {
       throw new Error("Missing action listener");
     }
-    const isListened = this.ee.emit(event, {
-      eventData: rest,
-      hubProps: this.props,
-    });
+    const isListened = this.ee.emit(event, rest);
     debug(`emit ${event} ${rest}`);
     if (isListened) {
       db.collection("hubsActionsQueue")
@@ -249,19 +251,6 @@ class Hub {
 
   async init() {
     await this.auth();
-    const hubDoc = await this.docRef().get();
-    if (!hubDoc.exists) {
-      // Unexpected.
-      throw new Error("Internal error");
-    }
-    const data = hubDoc.data();
-    debug("init", data);
-    this.set(data);
-
-    // Process pending actions
-    (await this.actionsQueue().get()).forEach((doc) =>
-      this._emitTakeAction(doc)
-    );
   }
 
   async addEvent(eventProps) {

@@ -12,9 +12,10 @@ const snakecaseKeys = require("snakecase-keys");
 const YAMLStringify = (data) => YAML.stringify(data, { version: "1.1" });
 
 const {
-  logExceptions,
   logAndRethrowException,
   logButNotRethrowException,
+  logExceptions,
+  objEqual,
 } = require("./util");
 
 const MQTT_USER = process.env.MQTT_USER;
@@ -197,9 +198,38 @@ class Hub {
     return await (await fetchCore("states")).json();
   }
 
+  async setHubProps(hubProps = {}, { rollbackCb }) {
+    debug("setHubProps", hubProps);
+    const beforeHubProps = this.hubProps;
+    this.hubProps = { ...hubProps };
+
+    // Call setConfig? Yes if devicesProps changed.
+    if (
+      beforeHubProps &&
+      !objEqual(beforeHubProps?.devicesProps, hubProps?.devicesProps)
+    ) {
+      try {
+        await this.setConfig(hubProps);
+      } catch (error) {
+        // Rollback
+        debug("Error", error);
+        debug("Rolling back...", beforeHubProps);
+        try {
+          this.hubProps.devicesProps = beforeHubProps.devicesProps;
+          await rollbackCb({
+            devicesProps: beforeHubProps.devicesProps,
+          });
+        } catch (error) {
+          debug("Couldn't rollback", error);
+          this.hubProps.devicesProps = hubProps.devicesProps;
+        }
+      }
+    }
+  }
+
   // deviceId example: 0xb4e3f9fffef96753
   // state example: "on", "off", "toggle"
-  async setState({ eventData: { deviceId, state } }) {
+  async setState({ deviceId, state }) {
     const entityId = `switch.${deviceId}`;
     const service = {
       on: "turn_on",
@@ -212,7 +242,8 @@ class Hub {
     );
   }
 
-  async setConfig({ hubProps: { devicesProps = {} } }) {
+  async setConfig({ devicesProps = {} }) {
+    debug("setConfig");
     const automations = [];
     const groups = {};
 
@@ -445,7 +476,9 @@ module.exports = { hub };
       "/config/.storage/core.config",
       JSON.stringify(data, null, 2)
     );
-    res = await fetchCore("services/homeassistant/reload_core_config", { method: "POST" });
+    const res = await fetchCore("services/homeassistant/reload_core_config", {
+      method: "POST",
+    });
     if (!res.ok) {
       debug(`Couldn't reload core config: ${await res.text()}`);
     }

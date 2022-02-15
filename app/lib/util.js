@@ -1,3 +1,5 @@
+const _jsonStringify = require("json-stable-stringify");
+
 function logExceptions(fn, debug) {
   return async function (...args) {
     try {
@@ -26,8 +28,15 @@ function logButNotRethrowException(debug) {
   };
 }
 
+const jsonStringify = (object) => _jsonStringify(object);
+
+function objEqual(a, b) {
+  return jsonStringify(a) === jsonStringify(b);
+}
+
 module.exports = {
-  logExceptions,
   logAndRethrowException,
   logButNotRethrowException,
+  logExceptions,
+  objEqual,
 };

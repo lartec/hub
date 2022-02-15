@@ -28,9 +28,9 @@ hubCloud.onSetState(
   }, debug)
 );
 
-hubCloud.onSetConfig(
-  logExceptions(async function (data) {
-    await hubMachine.setConfig(data);
+hubCloud.onPropsChange(
+  logExceptions(async function (...args) {
+    await hubMachine.setHubProps(...args);
   }, debug)
 );
 
