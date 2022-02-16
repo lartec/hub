@@ -328,19 +328,19 @@ class Hub {
         newState: {
           context, // eslint-disable-line no-unused-vars
           entityId: _, // eslint-disable-line no-unused-vars
-          ...newState
+          attributes: { nextRising, nextSetting },
         },
-        oldState: {
-          context: __, // eslint-disable-line no-unused-vars
-          entityId: ___, // eslint-disable-line no-unused-vars
-          ...oldState
-        },
+        // oldState: {
+        //   context: __, // eslint-disable-line no-unused-vars
+        //   entityId: ___, // eslint-disable-line no-unused-vars
+        //   ...oldState
+        // },
       } = data;
       await this.docRef().set(
         {
           sun: {
-            newState,
-            oldState,
+            newState: { attributes: { nextRising, nextSetting } },
+            // oldState,
           },
         },
         { merge: true }
