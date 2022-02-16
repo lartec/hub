@@ -461,27 +461,22 @@ const hub = new Hub();
 
 module.exports = { hub };
 
-// Temporary workaround to setup location
-(async function () {
+// Keeping this code for future use
+// eslint-disable-next-line no-unused-vars
+async function setConfigLatLng() {
   const rawData = await fs.promises.readFile("/config/.storage/core.config");
   const data = JSON.parse(rawData);
-  if (
-    data.data.latitude !== -21.2557158 &&
-    data.data.longitude !== -47.8462731
-  ) {
-    debug("Setting latitude & longitude");
-    data.data.latitude = -21.2557158;
-    data.data.longitude = -47.8462731;
-    await fs.promises.writeFile(
-      "/config/.storage/core.config",
-      JSON.stringify(data, null, 2)
-    );
-    const res = await fetchCore("services/homeassistant/reload_core_config", {
-      method: "POST",
-    });
-    if (!res.ok) {
-      debug(`Couldn't reload core config: ${await res.text()}`);
-    }
-    debug("Core config reloaded");
+  data.data.latitude = -21.2557158;
+  data.data.longitude = -47.8462731;
+  await fs.promises.writeFile(
+    "/config/.storage/core.config",
+    JSON.stringify(data, null, 2)
+  );
+  const res = await fetchCore("services/homeassistant/reload_core_config", {
+    method: "POST",
+  });
+  if (!res.ok) {
+    debug(`Couldn't reload core config: ${await res.text()}`);
   }
-})();
+  debug("Core config reloaded");
+}
