@@ -24,6 +24,10 @@ const APP_ID = process.env.APP_ID;
 
 const KEYS_PATH = process.env.KEYS_PATH;
 
+const SEC = 1000;
+const MIN = 60 * SEC;
+const tHeartbeat = 10 * MIN;
+
 debug("API_KEY <secret>");
 debug("PROJECT_ID", PROJECT_ID);
 debug("SENDER_ID", SENDER_ID);
@@ -98,6 +102,7 @@ class Hub {
   constructor() {
     this.props = {};
     this.ee = new EventEmitter();
+    this.lastUpdated = new Date();
 
     firebase.auth().onAuthStateChanged(async (auth) => {
       if (!auth) {
@@ -113,6 +118,19 @@ class Hub {
       debug("onAuthStateChanged signIn", auth.uid);
       this.set({ id: auth.uid });
     });
+
+    // Heartbeat. It's used when there's no zigbee devices listed, because when they, their normal
+    // availability check will change its lastUpdated state and work as a heartbeat.
+    let heartbeatInt;
+    const heartbeat = () => {
+      if (this.lastUpdated < tHeartbeat) {
+        clearInterval(heartbeatInt);
+        heartbeatInt = setInterval(heartbeat, tHeartbeat);
+        return;
+      }
+      this.docSet();
+    };
+    heartbeatInt = setInterval(heartbeat, tHeartbeat);
   }
 
   onSetState(cb) {
@@ -216,7 +234,7 @@ class Hub {
       debug(`emit onPropsChange`, data);
       this.ee.emit("onPropsChange", data, {
         rollbackCb: async (data) => {
-          await this.docRef().set(data, { merge: true });
+          await this.docSet(data);
         },
       });
     });
@@ -311,17 +329,14 @@ class Hub {
         },
         ...rest
       } = data.newState;
-      await this.docRef().set(
-        {
-          devices: {
-            [deviceId]: {
-              attributes,
-              ...rest,
-            },
+      await this.docSet({
+        devices: {
+          [deviceId]: {
+            attributes,
+            ...rest,
           },
         },
-        { merge: true }
-      );
+      });
     }
     if (eventType === "state_changed" && entityId === "sun.sun") {
       const {
@@ -336,16 +351,18 @@ class Hub {
         //   ...oldState
         // },
       } = data;
-      await this.docRef().set(
-        {
-          sun: {
-            newState: { attributes: { nextRising, nextSetting } },
-            // oldState,
-          },
+      await this.docSet({
+        sun: {
+          newState: { attributes: { nextRising, nextSetting } },
+          // oldState,
         },
-        { merge: true }
-      );
+      });
     }
+  }
+
+  async docSet(data = {}) {
+    const lastUpdated = (this.lastUpdated = new Date());
+    await this.docRef().set({ lastUpdated, ...data }, { merge: true });
   }
 
   async addZigbeeEvent({ topic, data }) {
