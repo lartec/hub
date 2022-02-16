@@ -199,7 +199,7 @@ class Hub {
   }
 
   async setHubProps(hubProps = {}, { rollbackCb }) {
-    debug("setHubProps", hubProps);
+    debug("setHubProps (not displaying data to keep output small)");
     const beforeHubProps = this.hubProps;
     this.hubProps = { ...hubProps };
 

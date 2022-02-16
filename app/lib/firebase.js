@@ -231,7 +231,7 @@ class Hub {
     this.realtimeUnsubscribe1 = this.docRef().onSnapshot((doc) => {
       const data = doc.data();
       this.set(data);
-      debug(`emit onPropsChange`, data);
+      debug("emit onPropsChange (not displaying data to keep output small)");
       this.ee.emit("onPropsChange", data, {
         rollbackCb: async (data) => {
           await this.docSet(data);
