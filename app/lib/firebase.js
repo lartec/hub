@@ -269,6 +269,10 @@ class Hub {
 
   async init() {
     await this.auth();
+    const version = JSON.parse(
+      await fs.promises.readFile(`${__dirname}/../package.json`)
+    ).version;
+    await this.docSet({ metadata: { version } });
   }
 
   async addEvent(eventProps) {
