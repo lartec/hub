@@ -35,6 +35,7 @@ function objEqual(a, b) {
 }
 
 module.exports = {
+  jsonStringify,
   logAndRethrowException,
   logButNotRethrowException,
   logExceptions,

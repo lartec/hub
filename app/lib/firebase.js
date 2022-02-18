@@ -9,7 +9,7 @@ const fetch = require("node-fetch");
 const fs = require("fs");
 const { promisify } = require("util");
 
-const { logAndRethrowException } = require("./util");
+const { logAndRethrowException, jsonStringify } = require("./util");
 
 const generateKeyPair = promisify(crypto.generateKeyPair);
 const writeFile = promisify(fs.writeFile);
@@ -229,14 +229,18 @@ class Hub {
 
     // Listen to realtime udpates (including initial state)
     this.realtimeUnsubscribe1 = this.docRef().onSnapshot((doc) => {
-      const data = doc.data();
+      // eslint-disable-next-line no-unused-vars
+      const { devices, sun, publicKey, ...data } = doc.data();
+      const oldProps = jsonStringify(this.props);
       this.set(data);
-      debug("emit onPropsChange (not displaying data to keep output small)");
-      this.ee.emit("onPropsChange", data, {
-        rollbackCb: async (data) => {
-          await this.docSet(data);
-        },
-      });
+      if (oldProps !== jsonStringify(this.props)) {
+        debug("emit onPropsChange (not displaying data to keep output small)");
+        this.ee.emit("onPropsChange", data, {
+          rollbackCb: async (data) => {
+            await this.docSet(data);
+          },
+        });
+      }
     });
     this.realtimeUnsubscribe2 = this.actionsQueue().onSnapshot(
       (querySnapshot) => {
