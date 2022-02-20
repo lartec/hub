@@ -291,7 +291,10 @@ class Hub {
       triggerSettings = {},
       action
     ) {
-      const automation = { mode: "single" };
+      const automation = {
+        alias: `automation-${deviceId}-${trigger}`,
+        mode: "single",
+      };
 
       if (trigger === "sunrise") {
         automation.trigger = [{ platform: "sun", event: "sunrise" }];
