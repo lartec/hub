@@ -343,7 +343,6 @@ class Hub {
               hours,
               minutes,
               seconds,
-              milliseconds: 0,
             },
           },
         ];
