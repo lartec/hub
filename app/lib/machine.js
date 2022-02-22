@@ -63,9 +63,13 @@ async function setZeroconfName() {
   let ip;
   try {
     const { data } = await res.json();
-    ip = data.interfaces
-      .find((item) => item["interface"] === "eth0")
-      .ipv4.address[0].split("/")[0];
+    ip = data.interfaces.find((item) => item["interface"] === "eth0").ipv4
+      .address[0];
+    if (!ip) {
+      ip = data.interfaces.find((item) => item["interface"] === "wlan0").ipv4
+        .address[0];
+    }
+    ip = ip.split("/")[0];
     // FIXME, retry in case it's for some reason not ready.
   } catch (error) {
     throw new Error(
