@@ -9,7 +9,11 @@ const fetch = require("node-fetch");
 const fs = require("fs");
 const { promisify } = require("util");
 
-const { logAndRethrowException, jsonStringify } = require("./util");
+const {
+  logAndRethrowException,
+  logButNotRethrowException,
+  jsonStringify,
+} = require("./util");
 
 const generateKeyPair = promisify(crypto.generateKeyPair);
 const writeFile = promisify(fs.writeFile);
@@ -255,20 +259,20 @@ class Hub {
     const event = {
       addNewDevice: "onAddNewDevice",
       setState: "onSetState",
+      setConfig: "<skip>",
     }[action];
     if (!event) {
       throw new Error("Missing action listener");
     }
     const isListened = this.ee.emit(event, rest);
     debug(`emit ${event} ${rest}`);
-    if (isListened) {
-      db.collection("hubsActionsQueue")
-        .doc(id)
-        .delete()
-        .catch(logAndRethrowException);
-    } else {
-      // FIXME: retry / throw exception?
+    if (!isListened) {
+      debug("Oops. No listeners...");
     }
+    db.collection("hubsActionsQueue")
+      .doc(id)
+      .delete()
+      .catch(logButNotRethrowException);
   }
 
   async init() {
