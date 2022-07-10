@@ -10,7 +10,7 @@ import logging
 from homeassistant.components import mqtt
 from homeassistant.core import HomeAssistant, Event, State, callback
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.const import EVENT_TIME_CHANGED, EVENT_STATE_CHANGED, MATCH_ALL
+from homeassistant.const import EVENT_STATE_CHANGED
 
 # The domain of your component. Should be equal to the name of your component.
 DOMAIN = "lartec"
