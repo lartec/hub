@@ -4,7 +4,7 @@
 
     vim config.json and update version
     vim app/package.json and do the same version update
-    git tag
+    git tag <version>
     git push gh master --tags
 
 ### Publish update
