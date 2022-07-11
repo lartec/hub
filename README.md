@@ -12,4 +12,4 @@
     git checkout publish
     vim lartec/config.json and update version
     git commit
-    git push publicgh publish:master
+    git push publishgh publish:master
