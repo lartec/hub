@@ -2,15 +2,6 @@ diff --git a/zigbee2mqtt/config.json b/zigbee2mqtt/config.json
 index 7e22779..b022ea6 100644
 --- a/zigbee2mqtt/config.json
 +++ b/zigbee2mqtt/config.json
-@@ -35,7 +35,7 @@
-     "devices": "devices.yaml",
-     "groups": "groups.yaml",
-     "homeassistant": true,
--    "permit_join": false,
-+    "permit_join": true,
-     "mqtt": {
-       "base_topic": "zigbee2mqtt"
-     },
 @@ -43,10 +43,12 @@
        "port": "/dev/ttyACM0"
      },
@@ -22,7 +13,7 @@ index 7e22779..b022ea6 100644
 -      "network_key": [1, 3, 5, 7, 9, 11, 13, 15, 0, 2, 4, 6, 8, 10, 12, 13],
 +      "network_key": [],
 +      "network_key_string": "!secret zigbee2mqt_network_key",
-+      "ext_pan_id_string": "221, 221, 221, 221, 221, 221, 221, 221",
++      "ext_pan_id_string": "!secret ext_pan_id",
        "availability_blocklist": [],
        "availability_passlist": []
      },
