@@ -1,19 +1,14 @@
 {
   "name": "Zigbee2MQTT",
-  "version": "2.6.1-1",
+  "version": "1.27.0-1",
   "slug": "zigbee2mqtt",
   "description": "Use your ZigBee devices without the vendor's bridge or gateway",
-  "breaking_versions": [
-    "2.0.0-1"
-  ],
   "uart": true,
-  "udev": true,
   "url": "https://github.com/zigbee2mqtt/hassio-zigbee2mqtt/tree/master/zigbee2mqtt",
   "startup": "application",
   "services": [
     "mqtt:need"
   ],
-  "hassio_api": true,
   "arch": [
     "aarch64",
     "amd64",
@@ -24,23 +19,10 @@
   "boot": "auto",
   "init": false,
   "ingress": true,
-  "timeout": 30,
   "panel_icon": "mdi:zigbee",
   "map": [
-    {
-      "type": "share",
-      "read_only": false
-    },
-    {
-      "type": "homeassistant_config",
-      "read_only": false,
-      "path": "/config"
-    },
-    {
-      "type": "addon_config",
-      "read_only": false,
-      "path": "/addon_config"
-    }
+    "share:rw",
+    "config:rw"
   ],
   "ports": {
     "8485/tcp": 8485,
@@ -63,6 +45,7 @@
     "serial": {}
   },
   "schema": {
+    "zigbee_herdsman_debug": "bool?",
     "data_path": "str",
     "socat": {
       "enabled": "bool?",
@@ -77,17 +60,14 @@
       "key": "str?",
       "cert": "str?",
       "user": "str?",
-      "password": "str?",
-      "base_topic": "str?"
+      "password": "str?"
     },
     "serial": {
       "port": "str?",
-      "adapter": "match(zstack|deconz|zigate|ezsp|ember|zboss)?",
+      "adapter": "match(zstack|deconz|zigate|ezsp)?",
       "baudrate": "int?",
       "rtscts": "bool?"
-    },
-    "watchdog": "str?",
-    "force_onboarding": "bool?"
+    }
   },
-  "image": "ghcr.io/zigbee2mqtt/zigbee2mqtt-{arch}"
+  "image": "zigbee2mqtt/zigbee2mqtt-{arch}"
 }
